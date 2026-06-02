@@ -3,20 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Faturamento DB1 — Sistema de Faturamento</title>
-
-  <!-- SheetJS — Excel read/write -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+  <title>Faturamento DB1</title>
   <link rel="stylesheet" href="src/css/styles.css" />
 </head>
 
 <body>
 
-<!-- ═══════════════════════════════════════ HEADER ══════════════════════════════════════════ -->
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════════════ -->
 <header>
   <div class="header-brand">
-    <!-- DB1 logo SVG inline -->
     <svg class="header-logo" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="40" height="40" rx="8" fill="#F47920"/>
       <text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle"
@@ -30,37 +25,29 @@
   <span class="header-badge">AI First</span>
 </header>
 
-<!-- ═══════════════════════════════════════ MAIN ════════════════════════════════════════════ -->
+<!-- ═══ MAIN ══════════════════════════════════════════════════════════════════ -->
 <main>
 
-  <!-- ── Stepper ─────────────────────────────────────────────────────────── -->
-  <div class="stepper" role="navigation" aria-label="Etapas do faturamento">
-
-    <div class="step active" data-step="1" role="button" tabindex="0"
-         aria-label="Etapa 1: Gerar Faturamento">
+  <!-- Stepper -->
+  <div class="stepper">
+    <div class="step active" data-step="1">
       <div class="step-circle">1</div>
       <div class="step-info">
         <div class="step-label">Etapa 1</div>
         <div class="step-name">Gerar Faturamento</div>
       </div>
     </div>
-
     <div class="step-divider" id="divider1"></div>
-
-    <div class="step" data-step="2" role="button" tabindex="0"
-         aria-label="Etapa 2: Planilha de Detalhes">
+    <div class="step" data-step="2">
       <div class="step-circle">2</div>
       <div class="step-info">
         <div class="step-label">Etapa 2</div>
         <div class="step-name">Planilha de Detalhes</div>
       </div>
     </div>
-
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════ -->
-  <!-- STEP 1 — Upload + Config                                              -->
-  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ══ STEP 1 ══════════════════════════════════════════════════════════════ -->
   <div class="step-panel active" id="step1">
 
     <!-- Upload card -->
@@ -74,7 +61,6 @@
       </div>
       <div class="card-body">
 
-        <!-- Drop zone -->
         <div class="upload-zone" id="uploadZone">
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
           <span class="upload-icon">📊</span>
@@ -82,19 +68,16 @@
           <div class="upload-hint">ou <span>clique para selecionar</span> — .xlsx, .xls, .csv</div>
         </div>
 
-        <!-- File selected indicator -->
         <div class="file-selected" id="fileSelected">
           <span class="file-icon">📗</span>
           <div>
             <div class="file-name" id="fileName">—</div>
             <div class="file-size" id="fileSize"></div>
-            <div style="font-size:.75rem;color:var(--db1-gray-400);margin-top:2px" id="rowCount"></div>
           </div>
           <button class="btn btn-ghost" style="margin-left:auto;font-size:.8rem" id="btnNovoArquivo">
             🔄 Trocar arquivo
           </button>
         </div>
-
       </div>
     </div>
 
@@ -104,168 +87,125 @@
         <div class="card-icon">⚙️</div>
         <div>
           <div class="card-title">Configurações do Faturamento</div>
-          <div class="card-desc">Informe os dados para o relatório gerado</div>
+          <div class="card-desc">Ajuste os nomes de colunas se sua planilha usar nomenclatura diferente do padrão</div>
         </div>
       </div>
       <div class="card-body">
 
+        <!-- Skill info banner -->
+        <div style="display:flex;gap:12px;margin-bottom:1.5rem">
+          <div style="flex:1;background:rgba(37,99,201,.06);border:1px solid rgba(37,99,201,.2);
+                      border-radius:var(--radius);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px">
+            <span style="font-size:1.5rem">📊</span>
+            <div>
+              <div style="font-size:.78rem;font-weight:700;color:var(--db1-blue-light);
+                          text-transform:uppercase;letter-spacing:.5px">Skill utilizada</div>
+              <div style="font-weight:700;color:var(--db1-gray-800)">/db1-faturamento-html</div>
+              <div style="font-size:.75rem;color:var(--db1-gray-400)">Gera relatório HTML com gráficos e totais por projeto</div>
+            </div>
+          </div>
+        </div>
+
         <div class="config-grid">
           <div class="form-group">
-            <label class="form-label" for="inputCliente">Cliente *</label>
-            <input type="text" class="form-control" id="inputCliente"
-                   placeholder="Nome do cliente" />
+            <label class="form-label" for="colTotal">Coluna de Horas</label>
+            <input type="text" class="form-control" id="colTotal" value="TOTAL"
+                   placeholder="Ex: TOTAL" />
           </div>
           <div class="form-group">
-            <label class="form-label" for="inputPeriodo">Período de Referência *</label>
-            <input type="month" class="form-control" id="inputPeriodo" />
+            <label class="form-label" for="colArea">Coluna de Área (filtro NAO_FATURADO)</label>
+            <input type="text" class="form-control" id="colArea" value="Cod. Area"
+                   placeholder="Ex: Cod. Area" />
           </div>
-          <div class="form-group" style="grid-column: 1/-1">
-            <label class="form-label" for="inputDescricao">Observações (opcional)</label>
-            <input type="text" class="form-control" id="inputDescricao"
-                   placeholder="Ex: Faturamento referente ao desenvolvimento do módulo X" />
+          <div class="form-group">
+            <label class="form-label" for="colProjeto">Coluna de Projeto (666/667)</label>
+            <input type="text" class="form-control" id="colProjeto"
+                   value="Cód. Equipe Responsável"
+                   placeholder="Ex: Cód. Equipe Responsável" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="colResp">Coluna de Responsável</label>
+            <input type="text" class="form-control" id="colResp"
+                   value="Cód. Responsavel"
+                   placeholder="Ex: Cód. Responsavel" />
           </div>
         </div>
 
         <div class="actions">
           <span style="font-size:.78rem;color:var(--db1-gray-400);align-self:center">
-            Taxa: <strong>R$ 229,92 / hora</strong>
+            Taxa fixa: <strong>R$ 229,92 / hora</strong> &nbsp;·&nbsp;
+            Projetos: <strong>666 → PORTAL &nbsp; 667 → VENTAS</strong>
           </span>
-          <button class="btn btn-primary btn-lg" id="btnProcessar" disabled>
+          <button class="btn btn-primary btn-lg" id="btnGerarFaturamento" disabled>
             ⚡ Gerar Faturamento
           </button>
         </div>
-
       </div>
     </div>
 
   </div><!-- /step1 -->
 
-  <!-- ══════════════════════════════════════════════════════════════════════ -->
-  <!-- STEP 2 — Results + Export                                             -->
-  <!-- ══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- ══ STEP 2 ══════════════════════════════════════════════════════════════ -->
   <div class="step-panel" id="step2">
 
-    <!-- Client info bar -->
-    <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;
+    <!-- Action bar -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;
                 padding:.9rem 1.5rem;background:white;border-radius:var(--radius);
                 border:1px solid var(--db1-gray-200);box-shadow:var(--shadow-sm)">
-      <div>
-        <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;
-                     letter-spacing:.5px;color:var(--db1-gray-400)">Cliente</span>
-        <div style="font-weight:700;color:var(--db1-gray-800)" id="infoCliente">—</div>
+
+      <div style="flex:1;display:flex;gap:12px;align-items:center">
+        <!-- Skill badge -->
+        <div style="background:rgba(244,121,32,.1);border:1px solid rgba(244,121,32,.35);
+                    border-radius:var(--radius-sm);padding:.5rem .9rem;display:flex;align-items:center;gap:8px">
+          <span style="font-size:1rem">📋</span>
+          <div>
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;
+                        letter-spacing:.5px;color:var(--db1-orange-dk)">Skill</div>
+            <div style="font-size:.82rem;font-weight:700;color:var(--db1-gray-800)">/db1-report-transform</div>
+          </div>
+        </div>
+
+        <div style="color:var(--db1-gray-400);font-size:.85rem">
+          Gera a planilha padronizada DB1 para envio ao cliente
+        </div>
       </div>
-      <div style="width:1px;height:36px;background:var(--db1-gray-200)"></div>
-      <div>
-        <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;
-                     letter-spacing:.5px;color:var(--db1-gray-400)">Período</span>
-        <div style="font-weight:700;color:var(--db1-gray-800)" id="infoPeriodo">—</div>
-      </div>
-      <div style="width:1px;height:36px;background:var(--db1-gray-200)"></div>
-      <div>
-        <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;
-                     letter-spacing:.5px;color:var(--db1-gray-400)">Taxa</span>
-        <div style="font-weight:700;color:var(--db1-gray-800)" id="infoTaxa">—</div>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:.75rem">
-        <button class="btn btn-ghost" id="btnVoltar">← Voltar</button>
-        <button class="btn btn-orange btn-lg" id="btnExportar">
-          📥 Baixar Planilha de Detalhes
-        </button>
-      </div>
+
+      <button class="btn btn-ghost" id="btnVoltar">← Voltar</button>
+      <button class="btn btn-orange btn-lg" id="btnExportar">
+        📥 Baixar Planilha de Detalhes
+      </button>
     </div>
 
-    <!-- KPI cards -->
-    <div class="summary-grid">
-      <div class="summary-card accent">
-        <div class="summary-label">💰 Valor Total</div>
-        <div class="summary-value" id="summaryValor">—</div>
-        <div class="summary-sub">Faturamento do período</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">⏱️ Total de Horas</div>
-        <div class="summary-value" id="summaryHoras">—</div>
-        <div class="summary-sub">Horas faturáveis</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">📁 Projetos</div>
-        <div class="summary-value" id="summaryProjetos">—</div>
-        <div class="summary-sub">Projetos faturados</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-label">📋 Registros</div>
-        <div class="summary-value" id="summaryLinhas">—</div>
-        <div class="summary-sub">Linhas faturáveis</div>
-      </div>
-    </div>
-
-    <!-- Tabs -->
+    <!-- Faturamento HTML result -->
     <div class="card">
-      <div class="card-body" style="padding-bottom:0">
-        <div class="tab-bar">
-          <div class="tab active" data-tab="projetos">📁 Por Projeto</div>
-          <div class="tab" data-tab="detalhes">📋 Detalhamento</div>
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div>
+          <div class="card-title">Relatório de Faturamento</div>
+          <div class="card-desc" id="reportSubtitle">Gerado pela skill /db1-faturamento-html</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:.75rem">
+          <button class="btn btn-outline" id="btnAbrirHtml" style="display:none">
+            🔗 Abrir em nova aba
+          </button>
         </div>
       </div>
-
-      <!-- Tab: Projetos -->
-      <div class="tab-panel active" id="panel-projetos">
-        <div class="card-body" style="padding-top:.5rem">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Projeto</th>
-                  <th>Empresa</th>
-                  <th>Tarefas</th>
-                  <th>Total Horas</th>
-                  <th>% Horas</th>
-                  <th>Valor</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyProjetos"></tbody>
-              <tfoot id="tfootProjetos"></tfoot>
-            </table>
-          </div>
-        </div>
+      <div class="card-body" style="padding:0">
+        <iframe id="reportFrame"
+                style="width:100%;height:640px;border:none;border-radius:0 0 var(--radius-lg) var(--radius-lg)"
+                title="Relatório de Faturamento">
+        </iframe>
       </div>
-
-      <!-- Tab: Detalhamento -->
-      <div class="tab-panel" id="panel-detalhes">
-        <div class="card-body" style="padding-top:.5rem">
-          <div class="detail-header">
-            <span style="font-size:.85rem;color:var(--db1-gray-400)" id="detailCount"></span>
-            <input type="text" class="search-input" id="searchDetail"
-                   placeholder="🔍 Filtrar por projeto, recurso, descrição..." />
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Projeto</th>
-                  <th>Recurso</th>
-                  <th>Descrição da Tarefa</th>
-                  <th>Serviço</th>
-                  <th>Início</th>
-                  <th>Término</th>
-                  <th>Horas</th>
-                  <th>Valor</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyDetail"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /card tabs -->
+    </div>
 
   </div><!-- /step2 -->
 
 </main>
 
-<!-- ═══════════════════════════════════════ FOOTER ══════════════════════════════════════════ -->
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════════════ -->
 <footer>
-  © 2025 DB1 Global Software — Sistema de Faturamento v1.0 &nbsp;|&nbsp; AI First
+  © 2025 DB1 Global Software — Sistema de Faturamento v2.0 &nbsp;|&nbsp; AI First
 </footer>
 
 <!-- Processing overlay -->
@@ -273,17 +213,13 @@
   <div class="processing-box">
     <div class="spinner"></div>
     <div class="processing-title" id="processingMsg">Processando...</div>
-    <div class="processing-sub">Aguarde, estamos calculando o faturamento</div>
+    <div class="processing-sub" id="processingSub">Aguarde</div>
   </div>
 </div>
 
-<!-- Toast container -->
+<!-- Toast -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Scripts -->
-<script src="src/js/processor.js"></script>
-<script src="src/js/exporter.js"></script>
 <script src="src/js/app.js"></script>
-
 </body>
 </html>

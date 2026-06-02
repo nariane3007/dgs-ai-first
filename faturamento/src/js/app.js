@@ -1,324 +1,182 @@
 /**
- * app.js — DB1 Billing App — Main controller
+ * app.js — DB1 Faturamento App v2
+ * Orchestrates two skills via Flask backend:
+ *   Etapa 1 → POST /api/faturamento  → skill: db1-faturamento-html
+ *   Etapa 2 → POST /api/relatorio    → skill: db1-report-transform
  */
 
 const App = (() => {
-  // ── State ────────────────────────────────────────────────────────────────
   let state = {
-    currentStep: 1,
+    step: 1,
     file: null,
-    rawRows: [],
-    billingData: null,
-    config: {
-      cliente: '',
-      periodo: '',
-      descricao: '',
-    },
-    detailFilter: '',
-    activeTab: 'projetos',
+    reportHtml: null,
+    reportBlob: null,
   };
 
-  // ── DOM refs ─────────────────────────────────────────────────────────────
   const $ = id => document.getElementById(id);
 
-  // ── Init ─────────────────────────────────────────────────────────────────
+  // ── Init ──────────────────────────────────────────────────────────────────
   function init() {
-    setupUploadZone();
-    setupStepNavigation();
-    setupConfigForm();
-    setupDetailSearch();
-    renderStep(1);
+    setupUpload();
+    setupButtons();
+    setStep(1);
   }
 
-  // ── Upload Zone ──────────────────────────────────────────────────────────
-  function setupUploadZone() {
+  // ── Upload ────────────────────────────────────────────────────────────────
+  function setupUpload() {
     const zone  = $('uploadZone');
     const input = $('fileInput');
 
-    zone.addEventListener('dragover', e => {
-      e.preventDefault();
-      zone.classList.add('drag-over');
-    });
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
     zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
+      e.preventDefault(); zone.classList.remove('drag-over');
+      handleFile(e.dataTransfer.files[0]);
     });
-
-    input.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) handleFile(file);
-    });
+    input.addEventListener('change', e => handleFile(e.target.files[0]));
   }
 
   function handleFile(file) {
+    if (!file) return;
     if (!file.name.match(/\.(xlsx|xls|csv)$/i)) {
-      showToast('Formato inválido. Use .xlsx, .xls ou .csv', 'error');
-      return;
+      toast('Formato inválido. Use .xlsx, .xls ou .csv', 'error'); return;
     }
-
     state.file = file;
-    $('fileName').textContent   = file.name;
-    $('fileSize').textContent   = formatBytes(file.size);
+    $('fileName').textContent = file.name;
+    $('fileSize').textContent = fmtBytes(file.size);
     $('fileSelected').classList.add('show');
     $('uploadZone').style.display = 'none';
+    $('btnGerarFaturamento').disabled = false;
+    toast(`Arquivo "${file.name}" carregado ✓`);
+  }
 
-    // Auto-fill cliente from filename
-    const basename = file.name.replace(/\.(xlsx|xls|csv)$/i, '').replace(/[-_]/g, ' ');
-    if (!state.config.cliente) {
-      $('inputCliente').value = basename;
-      state.config.cliente    = basename;
+  // ── Buttons ───────────────────────────────────────────────────────────────
+  function setupButtons() {
+    $('btnNovoArquivo').addEventListener('click', resetFile);
+    $('btnGerarFaturamento').addEventListener('click', etapa1);
+    $('btnVoltar').addEventListener('click', () => setStep(1));
+    $('btnExportar').addEventListener('click', etapa2);
+    $('btnAbrirHtml')?.addEventListener('click', abrirHtmlNovaAba);
+  }
+
+  // ── Etapa 1 — skill: db1-faturamento-html ────────────────────────────────
+  async function etapa1() {
+    if (!state.file) { toast('Selecione um arquivo primeiro.', 'warn'); return; }
+
+    showProcessing('Gerando Faturamento...', 'Executando skill /db1-faturamento-html');
+
+    const form = new FormData();
+    form.append('file',        state.file);
+    form.append('col_total',   $('colTotal').value   || 'TOTAL');
+    form.append('col_area',    $('colArea').value    || 'Cod. Area');
+    form.append('col_projeto', $('colProjeto').value || 'Cód. Equipe Responsável');
+    form.append('col_resp',    $('colResp').value    || 'Cód. Responsavel');
+
+    try {
+      const res  = await fetch('/api/faturamento', { method: 'POST', body: form });
+      const data = await res.json();
+      hideProcessing();
+
+      if (!res.ok || data.error) {
+        toast(data.error || 'Erro ao processar.', 'error');
+        if (data.detail) console.error('[db1-faturamento-html]', data.detail);
+        return;
+      }
+
+      // Display HTML inside iframe via Blob URL
+      state.reportHtml = data.html;
+      const blob = new Blob([data.html], { type: 'text/html;charset=utf-8' });
+      state.reportBlob = URL.createObjectURL(blob);
+
+      $('reportFrame').src = state.reportBlob;
+      $('reportSubtitle').textContent = `Gerado pela skill /db1-faturamento-html — ${state.file.name}`;
+      $('btnAbrirHtml').style.display = '';
+
+      setStep(2);
+      toast('Relatório de faturamento gerado com sucesso! ✓');
+
+    } catch (err) {
+      hideProcessing();
+      toast('Erro de comunicação com o servidor. O backend está rodando?', 'error');
+      console.error(err);
     }
-
-    $('btnProcessar').disabled = false;
-    showToast(`Arquivo "${file.name}" carregado com sucesso ✓`, 'success');
-    readExcel(file);
   }
 
-  function readExcel(file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const wb   = XLSX.read(data, { type: 'array', cellDates: true });
-        const ws   = wb.Sheets[wb.SheetNames[0]];
-        state.rawRows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        $('rowCount').textContent = `${state.rawRows.length} linhas detectadas`;
-      } catch (err) {
-        showToast('Erro ao ler o arquivo Excel: ' + err.message, 'error');
+  // ── Etapa 2 — skill: db1-report-transform ────────────────────────────────
+  async function etapa2() {
+    if (!state.file) { toast('Arquivo não encontrado. Volte ao passo 1.', 'warn'); return; }
+
+    showProcessing('Gerando Planilha de Detalhes...', 'Executando skill /db1-report-transform');
+
+    const form = new FormData();
+    form.append('file', state.file);
+
+    try {
+      const res = await fetch('/api/relatorio', { method: 'POST', body: form });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        hideProcessing();
+        toast(err.error || 'Erro ao gerar planilha.', 'error');
+        if (err.detail) console.error('[db1-report-transform]', err.detail);
+        return;
       }
-    };
-    reader.readAsArrayBuffer(file);
-  }
 
-  // ── Config form ──────────────────────────────────────────────────────────
-  function setupConfigForm() {
-    ['inputCliente', 'inputPeriodo', 'inputDescricao'].forEach(id => {
-      $(id)?.addEventListener('input', e => {
-        const map = { inputCliente: 'cliente', inputPeriodo: 'periodo', inputDescricao: 'descricao' };
-        state.config[map[id]] = e.target.value;
-      });
-    });
+      // Trigger download
+      const blob     = await res.blob();
+      const url      = URL.createObjectURL(blob);
+      const a        = document.createElement('a');
+      const fileName = `Relatorio_DB1_${today()}.xlsx`;
+      a.href         = url;
+      a.download     = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
 
-    $('btnProcessar')?.addEventListener('click', processarFaturamento);
-    $('btnVoltar'   )?.addEventListener('click', () => goToStep(1));
-    $('btnExportar' )?.addEventListener('click', exportarPlanilha);
-    $('btnNovoArquivo')?.addEventListener('click', resetApp);
-  }
+      hideProcessing();
+      toast(`Planilha "${fileName}" baixada com sucesso! ✓`);
 
-  // ── Processing ───────────────────────────────────────────────────────────
-  function processarFaturamento() {
-    if (!state.rawRows.length) {
-      showToast('Aguarde o arquivo terminar de carregar.', 'warn');
-      return;
+    } catch (err) {
+      hideProcessing();
+      toast('Erro de comunicação com o servidor. O backend está rodando?', 'error');
+      console.error(err);
     }
-
-    showProcessing('Processando faturamento...');
-
-    setTimeout(() => {
-      try {
-        state.billingData = DB1Processor.process(state.rawRows, state.config);
-
-        if (!state.billingData.summary) {
-          hideProcessing();
-          showToast('Nenhuma linha faturável encontrada na planilha.', 'warn');
-          return;
-        }
-
-        hideProcessing();
-        goToStep(2);
-        renderStep2();
-        showToast('Faturamento gerado com sucesso!', 'success');
-      } catch (err) {
-        hideProcessing();
-        showToast('Erro ao processar: ' + err.message, 'error');
-        console.error(err);
-      }
-    }, 600);
   }
 
-  function exportarPlanilha() {
-    if (!state.billingData) return;
-    showProcessing('Gerando planilha de detalhes...');
-    setTimeout(() => {
-      try {
-        DB1Exporter.exportDetail(state.billingData, {
-          cliente:  state.config.cliente,
-          periodo:  state.config.periodo,
-          fileName: `Faturamento_${(state.config.cliente || 'DB1').replace(/\s+/g,'_')}_${state.config.periodo || today()}.xlsx`,
-        });
-        hideProcessing();
-        showToast('Planilha de detalhes exportada com sucesso!', 'success');
-      } catch (err) {
-        hideProcessing();
-        showToast('Erro ao exportar: ' + err.message, 'error');
-      }
-    }, 400);
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function abrirHtmlNovaAba() {
+    if (state.reportBlob) window.open(state.reportBlob, '_blank');
   }
 
-  // ── Step navigation ──────────────────────────────────────────────────────
-  function setupStepNavigation() {
-    document.querySelectorAll('.step').forEach(el => {
-      el.addEventListener('click', () => {
-        const n = parseInt(el.dataset.step);
-        if (n < state.currentStep || (n === 2 && state.billingData)) {
-          goToStep(n);
-        }
-      });
-    });
-  }
-
-  function goToStep(n) {
-    state.currentStep = n;
-    renderStep(n);
-  }
-
-  function renderStep(n) {
+  function setStep(n) {
+    state.step = n;
     document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
     $(`step${n}`)?.classList.add('active');
 
     document.querySelectorAll('.step').forEach(el => {
       const sn = parseInt(el.dataset.step);
       el.classList.remove('active', 'completed');
-      if (sn === n)        el.classList.add('active');
-      else if (sn < n)     el.classList.add('completed');
+      if (sn === n)    el.classList.add('active');
+      else if (sn < n) el.classList.add('completed');
     });
 
-    document.querySelectorAll('.step-divider').forEach((div, i) => {
-      div.classList.toggle('done', i + 1 < n);
-    });
+    const div = $('divider1');
+    if (div) div.classList.toggle('done', n > 1);
   }
 
-  // ── Step 2 render ─────────────────────────────────────────────────────────
-  function renderStep2() {
-    const { summary, projects, rows, meta } = state.billingData;
-
-    // Summary cards
-    $('summaryHoras' ).textContent = summary.horasFormatado;
-    $('summaryValor' ).textContent = summary.valorFormatado;
-    $('summaryProjetos').textContent = summary.totalProjetos;
-    $('summaryLinhas'  ).textContent = meta.billableRows;
-
-    // Header info
-    $('infoCliente').textContent = summary.cliente  || '—';
-    $('infoPeriodo').textContent = summary.periodo  || '—';
-    $('infoTaxa'   ).textContent = DB1Processor.formatCurrency(summary.taxaHora) + '/hora';
-
-    // Render tabs
-    renderProjectsTab(projects, summary);
-    renderDetailTab(rows);
-
-    setupTabs();
-  }
-
-  function renderProjectsTab(projects, summary) {
-    const tbody = $('tbodyProjetos');
-    tbody.innerHTML = '';
-    projects.forEach(p => {
-      const pct = ((p.totalHoras / summary.totalHoras) * 100).toFixed(1);
-      tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-          <td><strong>${escHtml(p.projectId)}</strong></td>
-          <td>${escHtml(p.empresa)}</td>
-          <td>${p.rows.length}</td>
-          <td>${DB1Processor.formatHours(p.totalHoras)} h</td>
-          <td><span class="badge badge-blue">${pct}%</span></td>
-          <td>${DB1Processor.formatCurrency(p.totalValor)}</td>
-        </tr>
-      `);
-    });
-
-    $('tfootProjetos').innerHTML = `
-      <tr>
-        <td colspan="3"><strong>TOTAL</strong></td>
-        <td><strong>${DB1Processor.formatHours(summary.totalHoras)} h</strong></td>
-        <td><strong>100%</strong></td>
-        <td><strong>${summary.valorFormatado}</strong></td>
-      </tr>
-    `;
-  }
-
-  function renderDetailTab(rows, filter = '') {
-    const tbody = $('tbodyDetail');
-    tbody.innerHTML = '';
-    const term = filter.toLowerCase();
-    const filtered = filter ? rows.filter(r =>
-      r.descTarefa.toLowerCase().includes(term) ||
-      r.recurso.toLowerCase().includes(term)    ||
-      r.projectId.toLowerCase().includes(term)  ||
-      r.empresa.toLowerCase().includes(term)
-    ) : rows;
-
-    if (!filtered.length) {
-      tbody.insertAdjacentHTML('beforeend', `
-        <tr><td colspan="8" style="text-align:center;color:var(--db1-gray-400);padding:2rem">
-          Nenhum registro encontrado.
-        </td></tr>
-      `);
-      return;
-    }
-
-    filtered.forEach(r => {
-      tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-          <td><span class="badge badge-blue">${escHtml(r.projectId)}</span></td>
-          <td>${escHtml(r.recurso)}</td>
-          <td title="${escHtml(r.descTarefa)}">${escHtml(truncate(r.descTarefa, 55))}</td>
-          <td>${escHtml(r.servico)}</td>
-          <td>${DB1Processor.formatDate(r.dataInicio)}</td>
-          <td>${DB1Processor.formatDate(r.dataTermino)}</td>
-          <td>${DB1Processor.formatHours(r.horasRealizadas)} h</td>
-          <td>${DB1Processor.formatCurrency(r.horasRealizadas * DB1Processor.RATE_PER_HOUR)}</td>
-        </tr>
-      `);
-    });
-
-    $('detailCount').textContent = `${filtered.length} registro${filtered.length !== 1 ? 's' : ''}`;
-  }
-
-  // ── Tabs ─────────────────────────────────────────────────────────────────
-  function setupTabs() {
-    document.querySelectorAll('.tab[data-tab]').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const target = tab.dataset.tab;
-        state.activeTab = target;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        tab.classList.add('active');
-        $(`panel-${target}`)?.classList.add('active');
-      });
-    });
-  }
-
-  // ── Detail search ─────────────────────────────────────────────────────────
-  function setupDetailSearch() {
-    $('searchDetail')?.addEventListener('input', e => {
-      state.detailFilter = e.target.value;
-      if (state.billingData) renderDetailTab(state.billingData.rows, state.detailFilter);
-    });
-  }
-
-  // ── Reset ─────────────────────────────────────────────────────────────────
-  function resetApp() {
-    state = { currentStep: 1, file: null, rawRows: [], billingData: null,
-              config: { cliente: '', periodo: '', descricao: '' },
-              detailFilter: '', activeTab: 'projetos' };
-    $('fileInput').value    = '';
+  function resetFile() {
+    state.file = null;
+    $('fileInput').value = '';
     $('fileSelected').classList.remove('show');
     $('uploadZone').style.display = '';
-    $('btnProcessar').disabled = true;
-    $('rowCount').textContent  = '';
-    $('inputCliente').value = '';
-    $('inputPeriodo').value = '';
-    $('inputDescricao').value = '';
-    goToStep(1);
+    $('btnGerarFaturamento').disabled = true;
+    if (state.reportBlob) { URL.revokeObjectURL(state.reportBlob); state.reportBlob = null; }
   }
 
-  // ── Utilities ─────────────────────────────────────────────────────────────
-  function showProcessing(msg = 'Processando...') {
-    $('processingMsg').textContent = msg;
+  function showProcessing(title = 'Processando...', sub = 'Aguarde') {
+    $('processingMsg').textContent = title;
+    $('processingSub').textContent = sub;
     $('processingOverlay').classList.add('show');
   }
 
@@ -326,34 +184,24 @@ const App = (() => {
     $('processingOverlay').classList.remove('show');
   }
 
-  function showToast(msg, type = 'success') {
+  function toast(msg, type = 'success') {
     const icons = { success: '✅', error: '❌', warn: '⚠️' };
     const el = document.createElement('div');
-    el.className = `toast ${type === 'error' ? 'error' : type === 'warn' ? 'warn' : ''}`;
+    el.className = `toast${type === 'error' ? ' error' : type === 'warn' ? ' warn' : ''}`;
     el.innerHTML = `<span>${icons[type] || '✅'}</span><span>${msg}</span>`;
     $('toastContainer').appendChild(el);
-    setTimeout(() => el.remove(), 4000);
+    setTimeout(() => el.remove(), 5000);
   }
 
-  function formatBytes(bytes) {
-    if (bytes < 1024)       return bytes + ' B';
-    if (bytes < 1024*1024)  return (bytes/1024).toFixed(1) + ' KB';
-    return (bytes/1024/1024).toFixed(1) + ' MB';
-  }
-
-  function truncate(str, n) {
-    return str.length > n ? str.slice(0, n) + '…' : str;
-  }
-
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  function fmtBytes(b) {
+    if (b < 1024)       return b + ' B';
+    if (b < 1024*1024)  return (b/1024).toFixed(1) + ' KB';
+    return (b/1024/1024).toFixed(1) + ' MB';
   }
 
   function today() {
     const d = new Date();
-    return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}`;
+    return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
   }
 
   return { init };
