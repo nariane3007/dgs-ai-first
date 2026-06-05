@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<!-- saved from url=(0161)file:///C:/Users/nariane.souza/OneDrive%20-%20DB1%20Group/Documentos/Claude/Projects/DGS%20-%20IA%20First%20Cen%C3%A1rio%201/assistente-ia-novatech-onepager.html -->
+<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistente IA – NovaTech | DB1 Global Software</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .page {
+    width: 900px;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    padding: 32px 40px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .header-left p {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 6px;
+    font-weight: 400;
+  }
+
+  .badge {
+    background: linear-gradient(135deg, #e94560, #c23152);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* BODY */
+  .body {
+    padding: 32px 40px 36px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  /* FLOW — full width */
+  .flow-section {
+    grid-column: 1 / -1;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 24px 28px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 16px;
+  }
+
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+  }
+
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .flow-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .flow-icon.blue  { background: #dbeafe; }
+  .flow-icon.indigo { background: #e0e7ff; }
+  .flow-icon.violet { background: #ede9fe; }
+  .flow-icon.green { background: #dcfce7; }
+
+  .flow-step-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .flow-step-sub {
+    font-size: 10.5px;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.4;
+    max-width: 110px;
+  }
+
+  .flow-arrow {
+    font-size: 20px;
+    color: #cbd5e1;
+    padding: 0 4px;
+    flex-shrink: 0;
+    margin-bottom: 28px;
+  }
+
+  /* ALERT SECTION */
+  .alert-section {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border: 1.5px solid #fbbf24;
+    border-left: 5px solid #f59e0b;
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .alert-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .alert-body {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .alert-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #92400e;
+    line-height: 1.3;
+  }
+
+  .alert-text {
+    font-size: 12px;
+    color: #78350f;
+    line-height: 1.65;
+  }
+
+  .alert-text strong {
+    font-weight: 700;
+    color: #92400e;
+  }
+
+  /* INFO CARDS */
+  .card {
+    border-radius: 12px;
+    padding: 22px 24px;
+    border: 1px solid transparent;
+  }
+
+  .card.green {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+
+  .card.red {
+    background: #fff5f5;
+    border-color: #fecaca;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card.green .card-title { color: #166534; }
+  .card.red   .card-title { color: #991b1b; }
+
+  .card-title .icon { font-size: 16px; }
+
+  .item-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .item-list li {
+    font-size: 12.5px;
+    color: #374151;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .card.green .dot { background: #22c55e; }
+  .card.red   .dot { background: #ef4444; }
+
+  /* SUCCESS CRITERIA — full width */
+  .criteria-section {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+    border-radius: 12px;
+    padding: 24px 28px;
+  }
+
+  .criteria-section .section-label {
+    color: #94a3b8;
+  }
+
+  .criteria-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .criterion {
+    background: rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .criterion-number {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .criterion:nth-child(1) .criterion-number { color: #60a5fa; }
+  .criterion:nth-child(2) .criterion-number { color: #a78bfa; }
+  .criterion:nth-child(3) .criterion-number { color: #34d399; }
+
+  .criterion-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .criterion-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.55;
+  }
+
+  /* FOOTER */
+  .footer {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    padding: 14px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-left {
+    font-size: 11px;
+    color: #94a3b8;
+  }
+
+  .footer-right {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e94560;
+    letter-spacing: 0.3px;
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Assistente IA NovaTech — Como funciona?</h1>
+      <p>Visão geral para alinhamento de expectativas · Projeto DB1 Global Software</p>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- FLUXO -->
+    <div class="flow-section">
+      <div class="section-label">Como funciona — fluxo simplificado</div>
+      <div class="flow">
+
+        <div class="flow-step">
+          <div class="flow-icon blue">💬</div>
+          <div class="flow-step-label">Atendente pergunta</div>
+          <div class="flow-step-sub">Em linguagem natural, via Teams</div>
+        </div>
+
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-step">
+          <div class="flow-icon indigo">🔍</div>
+          <div class="flow-step-label">Busca semântica</div>
+          <div class="flow-step-sub">O sistema localiza os trechos mais relevantes no SharePoint, Confluence e planilhas</div>
+        </div>
+
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-step">
+          <div class="flow-icon violet">🤖</div>
+          <div class="flow-step-label">IA formula resposta</div>
+          <div class="flow-step-sub">A partir dos trechos encontrados, gera resposta clara e objetiva</div>
+        </div>
+
+        <div class="flow-arrow">→</div>
+
+        <div class="flow-step">
+          <div class="flow-icon green">📎</div>
+          <div class="flow-step-label">Resposta + fonte</div>
+          <div class="flow-step-sub">O atendente recebe a resposta e o documento de origem para conferir</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DESTAQUE: ATUALIZAÇÃO DA BASE -->
+    <div class="alert-section">
+      <div class="alert-icon">📂</div>
+      <div class="alert-body">
+        <div class="alert-title">A qualidade das respostas depende diretamente da qualidade dos documentos</div>
+        <div class="alert-text">
+          O assistente só é tão bom quanto a base que ele consulta. Documentos desatualizados geram respostas desatualizadas — documentos contraditórios geram respostas imprecisas. A NovaTech possui três áreas atualizando documentação sem um processo unificado de revisão. <strong>Antes ou durante o projeto, será essencial organizar e validar essa base.</strong> A DB1 pode apoiar nesse mapeamento.
+        </div>
+      </div>
+    </div>
+
+    <!-- O QUE FAZ BEM -->
+    <div class="card green">
+      <div class="card-title">
+        <span class="icon">✅</span> O que o assistente faz bem
+      </div>
+      <ul class="item-list">
+        <li><span class="dot"></span>Localiza informações em segundos entre centenas de documentos</li>
+        <li><span class="dot"></span>Responde em linguagem natural, sem necessidade de treinamento técnico</li>
+        <li><span class="dot"></span>Sempre indica a fonte — o atendente sabe de onde veio a informação</li>
+        <li><span class="dot"></span>Funciona integrado ao Teams e SharePoint (ambiente já conhecido)</li>
+        <li><span class="dot"></span>Reduz variação nas respostas — menos dependência do "saber de cada um"</li>
+      </ul>
+    </div>
+
+    <!-- O QUE NÃO FAZ -->
+    <div class="card red">
+      <div class="card-title">
+        <span class="icon">⚠️</span> O que o assistente não faz
+      </div>
+      <ul class="item-list">
+        <li><span class="dot"></span>Não "sabe tudo": a resposta depende do que está nos documentos</li>
+        <li><span class="dot"></span>Não resolve contradições entre documentos — reflete o problema existente</li>
+        <li><span class="dot"></span>Não substitui documentação desatualizada: lixo entra, lixo sai</li>
+        <li><span class="dot"></span>Não toma decisões — sugere com base no que encontrou, a validação é humana</li>
+        <li><span class="dot"></span>Não é perfeito: pode errar, especialmente com informações ambíguas ou ausentes</li>
+      </ul>
+    </div>
+
+    <!-- CRITÉRIOS DE SUCESSO -->
+    <div class="criteria-section">
+      <div class="section-label">Critérios de sucesso propostos</div>
+      <div class="criteria-grid">
+
+        <div class="criterion">
+          <div class="criterion-number">12→2</div>
+          <div class="criterion-title">Tempo médio de busca por chamado</div>
+          <div class="criterion-desc">De 12 minutos para menos de 2 minutos. Medido antes e depois com amostragem real do time de atendimento.</div>
+        </div>
+
+        <div class="criterion">
+          <div class="criterion-number">~32h</div>
+          <div class="criterion-title">Horas liberadas por dia no time</div>
+          <div class="criterion-desc">45 atendentes × 192 chamados com consulta × 10 min de economia = quase 4 FTEs liberados para atendimento real.</div>
+        </div>
+
+        <div class="criterion">
+          <div class="criterion-number">% ✓</div>
+          <div class="criterion-title">Confiabilidade das respostas</div>
+          <div class="criterion-desc">Amostragem mensal avaliada por especialistas de Operações, Compliance e Comercial. Meta definida após piloto — compromisso honesto.</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end body -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left">NovaTech · Projeto Assistente IA · Junho 2026 · Confidencial</div>
+    <div class="footer-right">DB1 Global Software</div>
+  </div>
+
+</div>
+
+
+</body></html>
