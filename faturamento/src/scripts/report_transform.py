@@ -55,11 +55,16 @@ def get_project_id(cod):
     return ''
 
 
+def _norm(s):
+    """Lowercase + strip accents for fuzzy column matching."""
+    import unicodedata
+    return unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode().strip().lower()
+
 def find_col(df, candidates):
     """Find column by partial/normalized name."""
-    norm = {c.strip().lower(): c for c in df.columns}
+    norm = {_norm(c): c for c in df.columns}
     for cand in candidates:
-        k = cand.strip().lower()
+        k = _norm(cand)
         if k in norm:
             return norm[k]
         # partial match
@@ -187,21 +192,39 @@ def write_report(out_df, output_path):
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
+def find_header_row(filepath, sheet_name=0, max_rows=30):
+    """Detect the row index that contains the real column headers."""
+    probe = pd.read_excel(filepath, sheet_name=sheet_name, header=None, nrows=max_rows)
+    keywords = ['desc tarefa', 'dh inicio', 'dh início', 'total', 'cod. responsavel',
+                'cód. responsavel', 'cód. equipe', 'cod. equipe', 'inf compl']
+    for i, row in probe.iterrows():
+        vals = [str(v).strip().lower() for v in row.values if pd.notna(v)]
+        if any(any(k in v for k in keywords) for v in vals):
+            print(f"[INFO] Cabeçalho detectado na linha {i}")
+            return i
+    return 0
+
 def run(input_path: str, output_path: str):
     print(f"[INFO] Lendo: {input_path}")
-    sheets = pd.read_excel(input_path, sheet_name=None)
+    sheet_names = list(pd.read_excel(input_path, sheet_name=None, header=None, nrows=1).keys())
 
-    # Pick sheet that has the most relevant columns
     target_df = None
-    for name, sdf in sheets.items():
-        cols_lower = [str(c).strip().lower() for c in sdf.columns]
-        if any('desc tarefa' in c or 'dh iní' in c or 'dh inicio' in c for c in cols_lower):
+    for name in sheet_names:
+        header_row = find_header_row(input_path, sheet_name=name)
+        sdf = pd.read_excel(input_path, sheet_name=name, header=header_row)
+        sdf.columns = [str(c).strip() for c in sdf.columns]
+        cols_lower = [c.lower() for c in sdf.columns]
+        if any('desc tarefa' in c or 'dh in' in c or 'inf compl' in c for c in cols_lower):
             target_df = sdf
-            print(f"[INFO] Sheet selecionada: '{name}'")
+            print(f"[INFO] Sheet selecionada: '{name}' | header row: {header_row}")
             break
+
     if target_df is None:
-        target_df = list(sheets.values())[0]
-        print("[WARN] Usando primeira sheet.")
+        name = sheet_names[0]
+        header_row = find_header_row(input_path, sheet_name=name)
+        target_df = pd.read_excel(input_path, sheet_name=name, header=header_row)
+        target_df.columns = [str(c).strip() for c in target_df.columns]
+        print("[WARN] Usando primeira sheet com header detectado.")
 
     out_df = transform_db1(target_df)
     write_report(out_df, output_path)

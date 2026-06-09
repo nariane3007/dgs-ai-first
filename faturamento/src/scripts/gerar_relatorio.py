@@ -36,21 +36,52 @@ def fmt_brl(v):
 def fmt_hours(v):
     return f"{v:,.2f}h".replace(",","X").replace(".",",").replace("X",".")
 
+def _norm(s):
+    """Lowercase + strip accents for fuzzy column matching."""
+    import unicodedata
+    return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode().strip().lower()
+
 def find_col(df, candidates):
-    norm = {c.strip().lower(): c for c in df.columns}
+    norm = {_norm(c): c for c in df.columns}
     for cand in candidates:
-        if cand.strip().lower() in norm:
-            return norm[cand.strip().lower()]
+        k = _norm(cand)
+        if k in norm:
+            return norm[k]
+        # partial match fallback
+        for col_key, col_orig in norm.items():
+            if k in col_key or col_key in k:
+                return col_orig
     return None
 
+def find_header_row(filepath, sheet_name=0, max_rows=30):
+    """Detect the row index that contains the real column headers."""
+    probe = pd.read_excel(filepath, sheet_name=sheet_name, header=None, nrows=max_rows)
+    keywords = ['total', 'desc tarefa', 'dh inicio', 'dh início', 'cod. area',
+                'cód. responsavel', 'cod. responsavel', 'cód. equipe', 'cod. equipe']
+    for i, row in probe.iterrows():
+        vals = [str(v).strip().lower() for v in row.values if pd.notna(v)]
+        if any(any(k in v for k in keywords) for v in vals):
+            print(f"[INFO] Cabeçalho detectado na linha {i}")
+            return i
+    return 0
+
 def load_data(filepath, col_total, col_area, col_projeto):
-    sheets = pd.read_excel(filepath, sheet_name=None)
-    for name, sdf in sheets.items():
-        if col_total.strip().lower() in [c.strip().lower() for c in sdf.columns]:
-            print(f"[INFO] Sheet: '{name}'")
-            sdf.columns = [str(c).strip() for c in sdf.columns]
+    sheets = pd.read_excel(filepath, sheet_name=None, header=None, nrows=1)
+    sheet_names = list(sheets.keys())
+
+    for name in sheet_names:
+        header_row = find_header_row(filepath, sheet_name=name)
+        sdf = pd.read_excel(filepath, sheet_name=name, header=header_row)
+        sdf.columns = [str(c).strip() for c in sdf.columns]
+        cols_lower = [c.lower() for c in sdf.columns]
+        if any('total' in c or 'desc tarefa' in c or 'dh in' in c for c in cols_lower):
+            print(f"[INFO] Sheet: '{name}' | header row: {header_row}")
             return sdf
-    df = list(sheets.values())[0]
+
+    # fallback: first sheet with auto-detected header
+    name = sheet_names[0]
+    header_row = find_header_row(filepath, sheet_name=name)
+    df = pd.read_excel(filepath, sheet_name=name, header=header_row)
     df.columns = [str(c).strip() for c in df.columns]
     return df
 
