@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec Tracking Board — NovaTech Assistant</title>
+<style>
+  :root {
+    --col-w: 220px; --gap: 14px; --radius: 8px;
+    --c-rascunho:#94a3b8; --c-revisao:#f59e0b; --c-aprovada:#3b82f6;
+    --c-impl:#8b5cf6; --c-validada:#10b981;
+    --m-ingest:#0ea5e9; --m-query:#f43f5e; --m-feedback:#f97316;
+    --m-bot:#a855f7; --m-web:#14b8a6;
+    --drawer-w: 420px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0f172a; color: #e2e8f0; min-height: 100vh;
+    transition: margin-right .3s ease;
+  }
+  body.drawer-open { margin-right: var(--drawer-w); }
+
+  /* ── Header ── */
+  header {
+    padding: 16px 28px 12px;
+    border-bottom: 1px solid #1e293b;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; }
+  .header-sub { font-size: .78rem; color: #64748b; flex: 1; }
+  .repo-btn {
+    font-size: .72rem; padding: 5px 11px; border-radius: 6px;
+    background: #1e293b; border: 1px solid #334155; color: #94a3b8;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+  }
+  .repo-btn:hover { border-color: #475569; color: #e2e8f0; }
+
+  /* ── Repo modal ── */
+  .repo-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.6); z-index: 200; align-items: center; justify-content: center;
+  }
+  .repo-modal-overlay.open { display: flex; }
+  .repo-modal {
+    background: #1e293b; border-radius: 12px; padding: 24px;
+    width: 460px; max-width: 95vw; border: 1px solid #334155;
+  }
+  .repo-modal h3 { font-size: .9rem; color: #f1f5f9; margin-bottom: 6px; }
+  .repo-modal p  { font-size: .75rem; color: #64748b; margin-bottom: 14px; line-height: 1.5; }
+  .repo-modal input {
+    width: 100%; background: #0f172a; border: 1px solid #334155;
+    border-radius: 6px; padding: 8px 12px; color: #e2e8f0; font-size: .8rem;
+    font-family: monospace; margin-bottom: 14px;
+  }
+  .repo-modal input:focus { outline: none; border-color: #3b82f6; }
+  .repo-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-primary {
+    font-size: .78rem; padding: 7px 16px; border-radius: 6px;
+    background: #3b82f6; color: #fff; border: none; cursor: pointer; font-weight: 600;
+  }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-ghost {
+    font-size: .78rem; padding: 7px 16px; border-radius: 6px;
+    background: transparent; color: #94a3b8; border: 1px solid #334155; cursor: pointer;
+  }
+  .btn-ghost:hover { border-color: #475569; color: #e2e8f0; }
+
+  /* ── Filters ── */
+  .filters { padding: 10px 28px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .filters label { font-size: .75rem; color: #94a3b8; margin-right: 4px; }
+  .pill {
+    font-size: .72rem; padding: 4px 12px; border-radius: 999px; border: none;
+    cursor: pointer; font-weight: 600; background: #1e293b; color: #94a3b8;
+  }
+  .pill.active { color: #fff; }
+  .pill[data-m="all"].active      { background: #334155; }
+  .pill[data-m="ingest"].active   { background: var(--m-ingest); }
+  .pill[data-m="query"].active    { background: var(--m-query); }
+  .pill[data-m="feedback"].active { background: var(--m-feedback); }
+  .pill[data-m="bot"].active      { background: var(--m-bot); }
+  .pill[data-m="web"].active      { background: var(--m-web); }
+
+  /* ── Progress ── */
+  .progress-bar { padding: 8px 28px 0; display: flex; gap: 8px; align-items: center; }
+  .progress-track { flex:1; height:5px; background:#1e293b; border-radius:999px; overflow:hidden; }
+  .progress-fill  { height:100%; background:linear-gradient(90deg,#3b82f6,#10b981); border-radius:999px; transition:width .4s; }
+  .progress-label { font-size:.72rem; color:#64748b; min-width:90px; text-align:right; }
+
+  /* ── Board ── */
+  .board { display:flex; gap:var(--gap); padding:14px 28px 32px; overflow-x:auto; }
+  .column { flex: 0 0 var(--col-w); display:flex; flex-direction:column; gap:10px; }
+  .col-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px; border-radius:var(--radius);
+    font-size:.75rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+  }
+  .col-header .badge { font-size:.7rem; background:rgba(0,0,0,.25); padding:2px 7px; border-radius:999px; }
+  .col[data-col="rascunho"] .col-header { background:#1e293b; color:var(--c-rascunho); border-left:3px solid var(--c-rascunho); }
+  .col[data-col="revisao"]  .col-header { background:#1e293b; color:var(--c-revisao);  border-left:3px solid var(--c-revisao); }
+  .col[data-col="aprovada"] .col-header { background:#1e293b; color:var(--c-aprovada); border-left:3px solid var(--c-aprovada); }
+  .col[data-col="impl"]     .col-header { background:#1e293b; color:var(--c-impl);     border-left:3px solid var(--c-impl); }
+  .col[data-col="validada"] .col-header { background:#1e293b; color:var(--c-validada); border-left:3px solid var(--c-validada); }
+  .cards { display:flex; flex-direction:column; gap:8px; min-height:80px; }
+
+  /* ── Card ── */
+  .card {
+    background:#1e293b; border-radius:var(--radius); padding:11px 13px;
+    border-left:4px solid transparent; cursor:pointer;
+    transition:transform .15s, box-shadow .15s, opacity .2s; user-select:none;
+  }
+  .card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.4); }
+  .card.dragging { opacity:.35; transform:rotate(2deg); cursor:grabbing; }
+  .card.selected { outline: 2px solid #3b82f6; outline-offset: 2px; }
+
+  .card[data-m="ingest"]   { border-color:var(--m-ingest); }
+  .card[data-m="query"]    { border-color:var(--m-query); }
+  .card[data-m="feedback"] { border-color:var(--m-feedback); }
+  .card[data-m="bot"]      { border-color:var(--m-bot); }
+  .card[data-m="web"]      { border-color:var(--m-web); }
+
+  .card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .card-module { font-size:.65rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+  .card[data-m="ingest"]   .card-module { color:var(--m-ingest); }
+  .card[data-m="query"]    .card-module { color:var(--m-query); }
+  .card[data-m="feedback"] .card-module { color:var(--m-feedback); }
+  .card[data-m="bot"]      .card-module { color:var(--m-bot); }
+  .card[data-m="web"]      .card-module { color:var(--m-web); }
+
+  .card-open-hint { font-size:.6rem; color:#334155; }
+  .card:hover .card-open-hint { color:#475569; }
+  .card-artefato { font-size:.78rem; font-weight:700; color:#f1f5f9; margin-bottom:3px; }
+  .card-path { font-size:.67rem; color:#475569; font-family:monospace; margin-bottom:6px; }
+  .card-meta { display:flex; gap:5px; flex-wrap:wrap; }
+  .chip { font-size:.63rem; padding:2px 6px; border-radius:4px; background:#0f172a; color:#94a3b8; }
+  .chip.owner { color:#7dd3fc; }
+  .chip.gate  { color:#fbbf24; }
+
+  /* ── Checklist mini-progress on card ── */
+  .card-check-prog {
+    margin-top:7px; border-top:1px solid #0f172a; padding-top:6px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .card-check-track { flex:1; height:3px; background:#0f172a; border-radius:999px; overflow:hidden; }
+  .card-check-fill  { height:100%; border-radius:999px; background:#3b82f6; transition:width .3s; }
+  .card-check-label { font-size:.62rem; color:#475569; white-space:nowrap; }
+
+  /* ── SLA ── */
+  .sla-bar-wrap { margin-top:7px; border-top:1px solid #0f172a; padding-top:6px; }
+  .sla-label { display:flex; justify-content:space-between; font-size:.62rem; margin-bottom:3px; }
+  .sla-title { color:#64748b; font-weight:600; letter-spacing:.04em; text-transform:uppercase; }
+  .sla-time  { font-weight:700; }
+  .sla-track { height:3px; background:#0f172a; border-radius:999px; overflow:hidden; }
+  .sla-fill  { height:100%; border-radius:999px; transition:width .6s; }
+  .sla-ok   .sla-time { color:#10b981; } .sla-ok   .sla-fill { background:#10b981; }
+  .sla-warn .sla-time { color:#f59e0b; } .sla-warn .sla-fill { background:#f59e0b; }
+  .sla-over .sla-time { color:#ef4444; } .sla-over .sla-fill { background:#ef4444; }
+  .sla-over { animation:pulse-border .9s ease-in-out infinite; }
+  @keyframes pulse-border {
+    0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,0); }
+    50%     { box-shadow:0 0 0 3px rgba(239,68,68,.35); }
+  }
+
+  .card.hidden { display:none; }
+
+  /* ── Revision badge ── */
+  .rev-badge {
+    font-size: .6rem; font-weight: 800; padding: 2px 7px;
+    border-radius: 999px; letter-spacing: .04em; text-transform: uppercase;
+    background: #2d1b69; color: #a78bfa; border: 1px solid #4c1d95;
+    white-space: nowrap;
+  }
+  .rev-badge.hot { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+
+  /* ── Revision timeline in drawer ── */
+  .rev-timeline { display: flex; flex-direction: column; gap: 0; }
+  .rev-event {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 6px 0; position: relative;
+  }
+  .rev-event:not(:last-child)::before {
+    content: ''; position: absolute; left: 9px; top: 22px;
+    width: 2px; bottom: -6px; background: #1e293b;
+  }
+  .rev-dot {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .6rem; font-weight: 900; margin-top: 1px;
+  }
+  .rev-dot.initial { background: #1e293b; color: #475569; border: 2px solid #334155; }
+  .rev-dot.changed { background: #2d1b69; color: #a78bfa; border: 2px solid #4c1d95; font-size: .55rem; }
+  .rev-dot.current { background: #1e3a8a; color: #60a5fa; border: 2px solid #1d4ed8; }
+  .rev-info { flex: 1; }
+  .rev-label { font-size: .75rem; font-weight: 700; color: #e2e8f0; }
+  .rev-detail { font-size: .68rem; color: #475569; margin-top: 1px; }
+
+  /* ── Drawer ── */
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: var(--drawer-w); background: #111827;
+    border-left: 1px solid #1e293b;
+    transform: translateX(100%); transition: transform .3s ease;
+    display: flex; flex-direction: column; z-index: 100;
+    overflow: hidden;
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-header {
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid #1e293b;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  }
+  .drawer-module-tag {
+    font-size: .65rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .drawer-title { font-size: .95rem; font-weight: 700; color: #f1f5f9; }
+  .drawer-status {
+    font-size: .65rem; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    margin-top: 4px; display: inline-block; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .drawer-close {
+    background: none; border: none; color: #475569; cursor: pointer;
+    font-size: 1.2rem; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;
+  }
+  .drawer-close:hover { background: #1e293b; color: #e2e8f0; }
+
+  .drawer-body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+  .drawer-body::-webkit-scrollbar { width: 4px; }
+  .drawer-body::-webkit-scrollbar-track { background: transparent; }
+  .drawer-body::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+
+  /* File section */
+  .drawer-section { margin-bottom: 22px; }
+  .drawer-section-title {
+    font-size: .68rem; font-weight: 700; color: #64748b;
+    letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .file-box {
+    background: #0f172a; border-radius: 8px; padding: 12px 14px;
+    border: 1px solid #1e293b;
+  }
+  .file-path {
+    font-family: monospace; font-size: .78rem; color: #7dd3fc;
+    word-break: break-all; margin-bottom: 10px; line-height: 1.5;
+  }
+  .file-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .file-btn {
+    font-size: .72rem; padding: 6px 12px; border-radius: 6px;
+    border: 1px solid #1e293b; cursor: pointer; font-weight: 600;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+    transition: border-color .15s, background .15s;
+  }
+  .file-btn-copy   { background: #1e293b; color: #94a3b8; }
+  .file-btn-copy:hover { border-color: #475569; color: #e2e8f0; }
+  .file-btn-open   { background: #1e314f; color: #3b82f6; border-color: #1d4ed8; }
+  .file-btn-open:hover { background: #1d3a6b; }
+  .file-btn.no-root { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+  /* Checklist section */
+  .checklist-gate {
+    font-size: .72rem; color: #fbbf24; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  }
+  .checklist-meta {
+    font-size: .7rem; color: #64748b; margin-bottom: 12px;
+    display: flex; gap: 12px;
+  }
+  .checklist-progress {
+    display: flex; align-items: center; gap: 9px; margin-bottom: 12px;
+  }
+  .cl-track { flex:1; height:5px; background:#1e293b; border-radius:999px; overflow:hidden; }
+  .cl-fill  { height:100%; border-radius:999px; background:#3b82f6; transition:width .3s; }
+  .cl-label { font-size:.7rem; color:#64748b; white-space:nowrap; }
+  .cl-label.done { color:#10b981; font-weight:700; }
+
+  .checklist-items { display: flex; flex-direction: column; gap: 8px; }
+  .cl-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 9px 12px; background: #1e293b; border-radius: 7px;
+    cursor: pointer; border: 1px solid transparent;
+    transition: border-color .15s, background .15s;
+  }
+  .cl-item:hover { border-color: #334155; }
+  .cl-item.checked { background: #0d1f0f; border-color: #166534; }
+  .cl-checkbox {
+    width: 17px; height: 17px; border-radius: 4px; border: 2px solid #334155;
+    flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center;
+    transition: all .15s; background: transparent;
+  }
+  .cl-item.checked .cl-checkbox { background: #10b981; border-color: #10b981; }
+  .cl-item.checked .cl-checkbox::after { content:'✓'; font-size:.65rem; color:#fff; font-weight:900; }
+  .cl-text { font-size: .78rem; color: #cbd5e1; line-height: 1.45; }
+  .cl-item.checked .cl-text { color: #4b7c5a; text-decoration: line-through; }
+
+  /* Advance button */
+  .drawer-footer {
+    padding: 14px 20px; border-top: 1px solid #1e293b;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .advance-btn {
+    width: 100%; padding: 10px; border-radius: 8px; border: none;
+    font-size: .82rem; font-weight: 700; cursor: pointer;
+    background: #3b82f6; color: #fff;
+    transition: background .15s, opacity .15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .advance-btn:hover:not(:disabled) { background: #2563eb; }
+  .advance-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .advance-btn.full { background: #10b981; }
+  .advance-btn.full:hover:not(:disabled) { background: #059669; }
+  .advance-hint { font-size: .68rem; color: #475569; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ── Repo root modal ── -->
+<div class="repo-modal-overlay" id="repoModal">
+  <div class="repo-modal">
+    <h3>📁 Caminho do repositório</h3>
+    <p>Informe o caminho local da raiz do repositório. O botão "Abrir arquivo" vai montar o endereço <code>file://</code> para abrir o arquivo direto no navegador.</p>
+    <input type="text" id="repoInput" placeholder="Ex: C:/projetos/novatech-assistant">
+    <div class="repo-modal-actions">
+      <button class="btn-ghost" onclick="closeRepoModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveRepoRoot()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Drawer ── -->
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div style="flex:1">
+      <div class="drawer-module-tag" id="d-module"></div>
+      <div class="drawer-title" id="d-title"></div>
+      <span class="drawer-status" id="d-status"></span>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body">
+
+    <!-- File -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">📄 Arquivo</div>
+      <div class="file-box">
+        <div class="file-path" id="d-filepath"></div>
+        <div class="file-actions">
+          <button class="file-btn file-btn-copy" onclick="copyPath()">⎘ Copiar caminho</button>
+          <a class="file-btn file-btn-open" id="d-filelink" href="#" target="_blank">↗ Abrir arquivo</a>
+        </div>
+      </div>
+      <div id="d-noroot" style="font-size:.68rem;color:#64748b;margin-top:6px;display:none">
+        ⚙ <a href="#" onclick="openRepoModal();return false;" style="color:#3b82f6">Configure o caminho do repositório</a> para habilitar o botão "Abrir arquivo".
+      </div>
+    </div>
+
+    <!-- Revision history -->
+    <div class="drawer-section" id="d-rev-section" style="display:none">
+      <div class="drawer-section-title">🔁 Histórico de revisões</div>
+      <div class="rev-timeline" id="d-rev-timeline"></div>
+      <div id="d-rev-commit-wrap" style="margin-top:10px;display:none">
+        <input id="d-rev-commit" type="text" placeholder="Motivo da reabertura (ex: scope change — SLA ajustado)"
+          style="width:100%;background:#0f172a;border:1px solid #1e293b;border-radius:6px;
+                 padding:7px 10px;color:#e2e8f0;font-size:.75rem;font-family:monospace;">
+        <button onclick="confirmReopen()"
+          style="margin-top:7px;width:100%;padding:8px;border-radius:6px;border:none;
+                 background:#7f1d1d;color:#fca5a5;font-size:.78rem;font-weight:700;cursor:pointer;">
+          ↩ Confirmar reabertura para "Em Revisão"
+        </button>
+      </div>
+      <button id="d-reopen-btn" onclick="toggleReopenForm()"
+        style="margin-top:10px;width:100%;padding:7px;border-radius:6px;border:1px solid #334155;
+               background:transparent;color:#64748b;font-size:.73rem;cursor:pointer;display:none">
+        ↩ Reabrir spec para revisão
+      </button>
+    </div>
+
+    <!-- Checklist -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">✅ Checklist de validação</div>
+      <div class="checklist-gate" id="d-gate"></div>
+      <div class="checklist-meta" id="d-meta"></div>
+      <div class="checklist-progress">
+        <div class="cl-track"><div class="cl-fill" id="d-cl-fill" style="width:0%"></div></div>
+        <span class="cl-label" id="d-cl-label">0 / 0</span>
+      </div>
+      <div class="checklist-items" id="d-checklist"></div>
+    </div>
+
+  </div>
+  <div class="drawer-footer">
+    <div class="advance-hint" id="d-advance-hint"></div>
+    <button class="advance-btn" id="d-advance-btn" onclick="advanceCard()">→ Avançar para próxima etapa</button>
+  </div>
+</div>
+
+<!-- ── App ── -->
+<header>
+  <h1>📋 Spec Tracking Board</h1>
+  <span class="header-sub">NovaTech Assistant — Fase 2: Estruturação</span>
+  <button class="repo-btn" onclick="openRepoModal()">⚙ Repositório</button>
+</header>
+
+<div class="progress-bar">
+  <span style="font-size:.72rem;color:#94a3b8">Progresso geral</span>
+  <div class="progress-track"><div class="progress-fill" id="pFill" style="width:0%"></div></div>
+  <span class="progress-label" id="pLabel">0 / 15 validadas</span>
+</div>
+
+<div class="filters">
+  <label>Módulo:</label>
+  <button class="pill active" data-m="all">Todos</button>
+  <button class="pill" data-m="ingest">Pipeline Ingestão</button>
+  <button class="pill" data-m="query">API Busca</button>
+  <button class="pill" data-m="feedback">API Feedback</button>
+  <button class="pill" data-m="bot">Bot Teams</button>
+  <button class="pill" data-m="web">Painel Web</button>
+</div>
+
+<div class="board" id="board">
+  <div class="col column" data-col="rascunho">
+    <div class="col-header">Rascunho <span class="badge" id="cnt-rascunho">0</span></div>
+    <div class="cards" id="cards-rascunho"></div>
+  </div>
+  <div class="col column" data-col="revisao">
+    <div class="col-header">Em Revisão <span class="badge" id="cnt-revisao">0</span></div>
+    <div class="cards" id="cards-revisao"></div>
+  </div>
+  <div class="col column" data-col="aprovada">
+    <div class="col-header">Aprovada <span class="badge" id="cnt-aprovada">0</span></div>
+    <div class="cards" id="cards-aprovada"></div>
+  </div>
+  <div class="col column" data-col="impl">
+    <div class="col-header">Em Implementação <span class="badge" id="cnt-impl">0</span></div>
+    <div class="cards" id="cards-impl"></div>
+  </div>
+  <div class="col column" data-col="validada">
+    <div class="col-header">Validada <span class="badge" id="cnt-validada">0</span></div>
+    <div class="cards" id="cards-validada"></div>
+  </div>
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────
+const COLS = ['rascunho','revisao','aprovada','impl','validada'];
+const COL_LABELS = {
+  rascunho:'Rascunho', revisao:'Em Revisão',
+  aprovada:'Aprovada', impl:'Em Implementação', validada:'Validada'
+};
+const COL_COLORS = {
+  rascunho:'#94a3b8', revisao:'#f59e0b', aprovada:'#3b82f6',
+  impl:'#8b5cf6', validada:'#10b981'
+};
+
+const MODULES = [
+  { id:'ingest',   label:'Pipeline Ingestão', slug:'pipeline-ingestao' },
+  { id:'query',    label:'API de Busca',       slug:'query-endpoint'    },
+  { id:'feedback', label:'API de Feedback',    slug:'feedback-api'      },
+  { id:'bot',      label:'Bot do Teams',       slug:'teams-bot'         },
+  { id:'web',      label:'Painel Web',         slug:'painel-web'        },
+];
+
+const CHECKLISTS = {
+  requirements: {
+    gate: 'Gate 1 — requirements.md → plan.md',
+    slaHours: 8,
+    approvers: 'Tech Lead (obrigatório)',
+    slaLabel: '1 dia útil após entrega',
+    items: [
+      'Cada requisito tem critério de aceite verificável (não ambíguo)',
+      'Todos os módulos afetados estão identificados',
+      'Não há contradição com ADRs existentes',
+      'Escopo está dentro do que foi validado no Discovery',
+      '"Fora de escopo" está explícito no documento',
+      'Nenhuma decisão técnica foi tomada no artefato',
+    ]
+  },
+  plan: {
+    gate: 'Revisão de Plan — plan.md → tasks.md',
+    slaHours: 8,
+    approvers: 'Product Specialist + Dev Sênior',
+    slaLabel: '1 dia útil após entrega',
+    items: [
+      'Decisões arquiteturais documentadas (ADR referenciado quando aplicável)',
+      'Estrutura de código listada com responsabilidade de cada arquivo em /src/',
+      'Dependências externas e de outros módulos identificadas',
+      'Estratégia de testes definida (unit, integration, e2e)',
+      'Riscos e mitigações descritos',
+      'Estimativa de esforço incluída (dias ou pontos)',
+      'Nenhum requisito funcional do requirements.md foi ignorado',
+    ]
+  },
+  tasks: {
+    gate: 'Gate 2 — tasks.md → Implementação',
+    slaHours: 4,
+    approvers: 'Tech Lead (obrigatório)',
+    slaLabel: '4 horas úteis após entrega',
+    items: [
+      'Cada task é atômica (concluível em no máximo 1 dia)',
+      'Toda task tem critério de done explícito com checkboxes',
+      'Toda task tem campo Contexto preenchido',
+      'Há tasks de teste para cada task de implementação',
+      'Dependências entre tasks estão mapeadas',
+      'Nenhuma task exige decisão arquitetural ainda não resolvida',
+      'Todo RF do requirements.md está endereçado no conjunto de tasks',
+    ]
+  }
+};
+
+const ARTEFATOS = [
+  { key:'requirements', label:'requirements.md', owner:'Product Specialist', reviewer:'Tech Lead',       gate:'Gate 1' },
+  { key:'plan',         label:'plan.md',          owner:'Tech Lead',          reviewer:'PS + Dev Sênior', gate:'Revisão Plan' },
+  { key:'tasks',        label:'tasks.md',          owner:'Dev + Copilot',      reviewer:'Tech Lead',       gate:'Gate 2' },
+];
+
+// ── Storage ───────────────────────────────────────────────
+const S_BOARD   = 'novatech-board-v2';
+const S_SLA     = 'novatech-sla-v2';
+const S_CHECKS  = 'novatech-checks-v2';
+const S_REPO    = 'novatech-repo-v1';
+const S_REV     = 'novatech-rev-v1';
+// Columns that, when left going back to revisao, trigger a new revision
+const REV_TRIGGER = ['aprovada','impl','validada'];
+
+const load  = k => { try { const r=localStorage.getItem(k); return r?JSON.parse(r):null; } catch(e){return null;} };
+const save  = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+
+function defaultBoard() {
+  const s={};
+  MODULES.forEach(m => ARTEFATOS.forEach(a => { s[`${m.id}-${a.key}`]='rascunho'; }));
+  return s;
+}
+
+let boardState   = load(S_BOARD)  || defaultBoard();
+let slaState     = load(S_SLA)    || {};
+let checkState   = load(S_CHECKS) || {};  // { "ingest-requirements": [true,false,...] }
+let repoRoot     = load(S_REPO)   || '';
+// revState: { "ingest-requirements": [{ts, from, commitMsg}, ...] }
+// Each entry = one revision round (not counting the initial review)
+let revState     = load(S_REV)    || {};
+
+// ── Business hours ────────────────────────────────────────
+const BIZ_S=9, BIZ_E=18;
+function bizHours(startMs) {
+  if (!startMs) return 0;
+  const now = Date.now();
+  if (startMs>=now) return 0;
+  let total=0, cur=new Date(startMs), end=new Date(now);
+  while(true) {
+    const d=cur.getDay();
+    if(d!==0&&d!==6){
+      const bs=new Date(cur); bs.setHours(BIZ_S,0,0,0);
+      const be=new Date(cur); be.setHours(BIZ_E,0,0,0);
+      const from=cur>bs?cur:bs, to=end<be?end:be;
+      if(to>from) total+=(to-from)/3600000;
+    }
+    cur=new Date(cur); cur.setDate(cur.getDate()+1); cur.setHours(BIZ_S,0,0,0);
+    if(cur>=end) break;
+  }
+  return total;
+}
+function fmtTime(h) {
+  const abs=Math.abs(h), hh=Math.floor(abs), mm=Math.round((abs-hh)*60);
+  if(hh===0) return `${mm}min`;
+  if(mm===0) return `${hh}h`;
+  return `${hh}h ${String(mm).padStart(2,'0')}min`;
+}
+
+// ── Checklist helpers ─────────────────────────────────────
+function getChecks(id) {
+  const cl = CHECKLISTS[id.split('-')[1]];
+  if (!cl) return [];
+  const saved = checkState[id];
+  if (saved && saved.length === cl.items.length) return saved;
+  return new Array(cl.items.length).fill(false);
+}
+function checkedCount(id) { return getChecks(id).filter(Boolean).length; }
+function allChecked(id)   { const ch=getChecks(id); return ch.length>0 && ch.every(Boolean); }
+
+// ── Render board ─────────────────────────────────────────
+let currentFilter = 'all';
+let openCardId    = null;
+
+function render(filter) {
+  currentFilter = filter ?? currentFilter;
+  COLS.forEach(c => document.getElementById(`cards-${c}`).innerHTML='');
+  MODULES.forEach(m => ARTEFATOS.forEach(a => {
+    const id=`${m.id}-${a.key}`;
+    document.getElementById(`cards-${boardState[id]}`).appendChild(buildCard(m,a,id));
+  }));
+  updateBadges(); updateProgress(); attachDrag();
+  if (openCardId) refreshDrawer(openCardId);
+}
+
+function buildCard(m, a, id) {
+  const col = boardState[id];
+  const cl  = CHECKLISTS[a.key];
+  const card = document.createElement('div');
+  card.className='card'; card.dataset.id=id; card.dataset.m=m.id; card.draggable=true;
+
+  if (currentFilter!=='all' && m.id!==currentFilter) card.classList.add('hidden');
+  if (col==='revisao' && bizHours(slaState[id])>=cl.slaHours) card.classList.add('sla-over');
+  if (id===openCardId) card.classList.add('selected');
+
+  const done=checkedCount(id), total=cl.items.length, pct=total?Math.round(done/total*100):0;
+  const revs=revState[id]||[], revNum=revs.length; // 0 = initial, 1 = rev2, etc.
+  const revLabel=revNum>0?`rev ${revNum+1}`:'';
+  const revHot=revNum>=2;
+
+  card.innerHTML=`
+    <div class="card-top">
+      <span class="card-module">${m.label}</span>
+      <span style="display:flex;align-items:center;gap:5px;">
+        ${revLabel?`<span class="rev-badge${revHot?' hot':''}">${revLabel}</span>`:''}
+        <span class="card-open-hint">↗</span>
+      </span>
+    </div>
+    <div class="card-artefato">${a.label}</div>
+    <div class="card-path">specs/${m.slug}/${a.label}</div>
+    <div class="card-meta">
+      <span class="chip owner">✍ ${a.owner}</span>
+      <span class="chip">👁 ${a.reviewer}</span>
+      <span class="chip gate">${a.gate}</span>
+    </div>
+    ${done>0||col==='revisao'?`<div class="card-check-prog">
+      <div class="card-check-track"><div class="card-check-fill" style="width:${pct}%"></div></div>
+      <span class="card-check-label">${done}/${total} checks</span>
+    </div>`:''}
+    ${buildSla(id, cl)}
+  `;
+
+  card.addEventListener('click', e => {
+    if (card.classList.contains('dragging')) return;
+    openDrawer(id);
+  });
+  return card;
+}
+
+function buildSla(id, cl) {
+  if (boardState[id]!=='revisao') return '';
+  const elapsed=bizHours(slaState[id]), rem=cl.slaHours-elapsed;
+  const pct=Math.min(100,Math.round(elapsed/cl.slaHours*100));
+  let cls,txt;
+  if(rem>cl.slaHours*.5) { cls='sla-ok';  txt=`⏱ ${fmtTime(rem)} restantes`; }
+  else if(rem>0)         { cls='sla-warn'; txt=`⚠ ${fmtTime(rem)} restantes`; }
+  else                   { cls='sla-over'; txt=`🔴 Estourado há ${fmtTime(rem)}`; }
+  const lbl=cl.slaHours===4?'Gate 2 · SLA 4h úteis':'Gate 1 · SLA 1 dia útil';
+  return `<div class="sla-bar-wrap ${cls}">
+    <div class="sla-label"><span class="sla-title">${lbl}</span><span class="sla-time">${txt}</span></div>
+    <div class="sla-track"><div class="sla-fill" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function updateBadges() {
+  const cnt={};
+  COLS.forEach(c=>cnt[c]=0);
+  Object.values(boardState).forEach(c=>cnt[c]++);
+  COLS.forEach(c=>{ document.getElementById(`cnt-${c}`).textContent=cnt[c]; });
+}
+function updateProgress() {
+  const v=Object.values(boardState).filter(c=>c==='validada').length;
+  const t=Object.keys(boardState).length;
+  document.getElementById('pFill').style.width=Math.round(v/t*100)+'%';
+  document.getElementById('pLabel').textContent=`${v} / ${t} validadas`;
+}
+
+// ── Drag ─────────────────────────────────────────────────
+let dragId=null;
+function attachDrag() {
+  document.querySelectorAll('.card:not(.hidden)').forEach(card=>{
+    card.addEventListener('dragstart',e=>{ dragId=card.dataset.id; card.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    card.addEventListener('dragend',  ()=>{ card.classList.remove('dragging'); });
+  });
+  document.querySelectorAll('.cards').forEach(zone=>{
+    zone.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; });
+    zone.addEventListener('drop',e=>{
+      e.preventDefault(); if(!dragId) return;
+      moveCard(dragId, zone.id.replace('cards-',''));
+    });
+  });
+}
+function moveCard(id, toCol, commitMsg) {
+  const fromCol=boardState[id];
+  if(toCol==='revisao' && fromCol!=='revisao') {
+    slaState[id]=Date.now(); save(S_SLA,slaState);
+    // New revision if returning from aprovada or later
+    if(REV_TRIGGER.includes(fromCol)) {
+      if(!revState[id]) revState[id]=[];
+      revState[id].push({ ts: Date.now(), from: fromCol, msg: commitMsg||'' });
+      save(S_REV, revState);
+    }
+  } else if(toCol!=='revisao' && fromCol==='revisao') {
+    delete slaState[id]; save(S_SLA,slaState);
+  }
+  boardState[id]=toCol; save(S_BOARD,boardState);
+  render();
+}
+
+// ── Drawer ───────────────────────────────────────────────
+function openDrawer(id) {
+  openCardId=id;
+  document.getElementById('drawer').classList.add('open');
+  document.body.classList.add('drawer-open');
+  refreshDrawer(id);
+  // highlight card
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+  document.querySelector(`.card[data-id="${id}"]`)?.classList.add('selected');
+}
+
+function closeDrawer() {
+  openCardId=null;
+  document.getElementById('drawer').classList.remove('open');
+  document.body.classList.remove('drawer-open');
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+}
+
+function refreshDrawer(id) {
+  const [mId, aKey] = id.split('-');
+  const m  = MODULES.find(x=>x.id===mId);
+  const a  = ARTEFATOS.find(x=>x.key===aKey);
+  const cl = CHECKLISTS[aKey];
+  if(!m||!a||!cl) return;
+
+  const col     = boardState[id];
+  const checks  = getChecks(id);
+  const done    = checks.filter(Boolean).length;
+  const total   = cl.items.length;
+  const allDone = done===total;
+  const colIdx  = COLS.indexOf(col);
+  const isLast  = colIdx===COLS.length-1;
+
+  // module colour
+  const mColor = getComputedStyle(document.documentElement).getPropertyValue(`--m-${mId}`).trim();
+
+  // header
+  const modTag = document.getElementById('d-module');
+  modTag.textContent=m.label; modTag.style.color=mColor;
+  document.getElementById('d-title').textContent=a.label;
+  const statusEl=document.getElementById('d-status');
+  statusEl.textContent=COL_LABELS[col];
+  statusEl.style.background=COL_COLORS[col]+'22';
+  statusEl.style.color=COL_COLORS[col];
+
+  // file
+  const relPath=`specs/${m.slug}/${a.label}`;
+  document.getElementById('d-filepath').textContent=relPath;
+  const linkEl=document.getElementById('d-filelink');
+  const noRootEl=document.getElementById('d-noroot');
+  if(repoRoot) {
+    const sep=repoRoot.endsWith('/')||repoRoot.endsWith('\\')?'':'/';
+    const full=repoRoot+sep+relPath.replace(/\//g,'/');
+    linkEl.href='file:///'+full.replace(/\\/g,'/');
+    linkEl.classList.remove('no-root');
+    noRootEl.style.display='none';
+  } else {
+    linkEl.href='#'; linkEl.classList.add('no-root');
+    noRootEl.style.display='block';
+  }
+
+  // ── Revision history ──
+  const revs = revState[id] || [];
+  const revSection  = document.getElementById('d-rev-section');
+  const revTimeline = document.getElementById('d-rev-timeline');
+  const reopenBtn   = document.getElementById('d-reopen-btn');
+  const commitWrap  = document.getElementById('d-rev-commit-wrap');
+
+  // Show section if there are revisions OR if card is in a state where reopening makes sense
+  const canReopen = REV_TRIGGER.includes(col);
+  revSection.style.display = (revs.length > 0 || canReopen) ? '' : 'none';
+  reopenBtn.style.display  = canReopen ? '' : 'none';
+  commitWrap.style.display = 'none'; // reset form
+
+  revTimeline.innerHTML = '';
+  // Build timeline: initial review + each revision
+  const allEvents = [
+    { label:'Revisão inicial', detail:'Primeira rodada de aprovação', type:'initial' },
+    ...revs.map((r,i) => ({
+      label:`Revisão ${i+2}`,
+      detail:`Retornou de "${COL_LABELS[r.from]}"${r.msg?' — '+r.msg:''} · ${new Date(r.ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}`,
+      type: i===revs.length-1 && col==='revisao' ? 'current' : 'changed'
+    }))
+  ];
+  allEvents.forEach(ev => {
+    const node = document.createElement('div');
+    node.className = 'rev-event';
+    node.innerHTML = `
+      <div class="rev-dot ${ev.type}">${ev.type==='initial'?'1':allEvents.indexOf(ev)+1}</div>
+      <div class="rev-info">
+        <div class="rev-label">${ev.label}</div>
+        <div class="rev-detail">${ev.detail}</div>
+      </div>`;
+    revTimeline.appendChild(node);
+  });
+
+  // ── Checklist gate ──
+  document.getElementById('d-gate').innerHTML=`🔒 ${cl.gate}`;
+  document.getElementById('d-meta').innerHTML=`<span>👁 ${cl.approvers}</span><span>⏱ ${cl.slaLabel}</span>`;
+
+  // checklist progress
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('d-cl-fill').style.width=pct+'%';
+  const lblEl=document.getElementById('d-cl-label');
+  lblEl.textContent=`${done} / ${total}`;
+  lblEl.className='cl-label'+(allDone?' done':'');
+
+  // checklist items
+  const container=document.getElementById('d-checklist');
+  container.innerHTML='';
+  cl.items.forEach((text,i)=>{
+    const item=document.createElement('div');
+    item.className='cl-item'+(checks[i]?' checked':'');
+    item.innerHTML=`<div class="cl-checkbox"></div><div class="cl-text">${text}</div>`;
+    item.addEventListener('click',()=>{ toggleCheck(id,i); });
+    container.appendChild(item);
+  });
+
+  // advance button
+  const advBtn=document.getElementById('d-advance-btn');
+  const advHint=document.getElementById('d-advance-hint');
+  if(isLast) {
+    advBtn.textContent='✓ Spec Validada'; advBtn.disabled=true; advBtn.className='advance-btn full';
+    advHint.textContent='';
+  } else {
+    const nextCol=COL_LABELS[COLS[colIdx+1]];
+    advBtn.textContent=`→ Mover para "${nextCol}"`;
+    advBtn.className='advance-btn'+(allDone?' full':'');
+    advBtn.disabled=false;
+    advHint.textContent=allDone?'Todos os checks completos — pronto para avançar!':'Você pode avançar mesmo sem completar todos os checks.';
+  }
+}
+
+function toggleCheck(id, idx) {
+  const checks=getChecks(id).slice();
+  checks[idx]=!checks[idx];
+  checkState[id]=checks; save(S_CHECKS,checkState);
+  refreshDrawer(id);
+  // update mini-progress on card
+  const card=document.querySelector(`.card[data-id="${id}"]`);
+  if(card) {
+    const cl=CHECKLISTS[id.split('-')[1]];
+    const done=checks.filter(Boolean).length, total=cl.items.length;
+    const pct=Math.round(done/total*100);
+    let cp=card.querySelector('.card-check-prog');
+    if(!cp) {
+      cp=document.createElement('div'); cp.className='card-check-prog';
+      cp.innerHTML=`<div class="card-check-track"><div class="card-check-fill"></div></div><span class="card-check-label"></span>`;
+      card.appendChild(cp);
+    }
+    cp.querySelector('.card-check-fill').style.width=pct+'%';
+    cp.querySelector('.card-check-label').textContent=`${done}/${total} checks`;
+  }
+}
+
+function advanceCard() {
+  if(!openCardId) return;
+  const col=boardState[openCardId], idx=COLS.indexOf(col);
+  if(idx>=COLS.length-1) return;
+  moveCard(openCardId, COLS[idx+1]);
+  refreshDrawer(openCardId);
+}
+
+function copyPath() {
+  const [mId,aKey]=openCardId.split('-');
+  const m=MODULES.find(x=>x.id===mId), a=ARTEFATOS.find(x=>x.key===aKey);
+  navigator.clipboard?.writeText(`specs/${m.slug}/${a.label}`);
+  const btn=document.querySelector('.file-btn-copy');
+  const orig=btn.textContent; btn.textContent='✓ Copiado!';
+  setTimeout(()=>btn.textContent=orig, 1500);
+}
+
+// ── Reopen spec ──────────────────────────────────────────
+function toggleReopenForm() {
+  const w = document.getElementById('d-rev-commit-wrap');
+  w.style.display = w.style.display === 'none' ? '' : 'none';
+  if(w.style.display !== 'none') document.getElementById('d-rev-commit').focus();
+}
+function confirmReopen() {
+  if(!openCardId) return;
+  const msg = document.getElementById('d-rev-commit').value.trim();
+  moveCard(openCardId, 'revisao', msg);
+  document.getElementById('d-rev-commit').value = '';
+}
+
+// ── Repo root modal ───────────────────────────────────────
+function openRepoModal() {
+  document.getElementById('repoInput').value=repoRoot;
+  document.getElementById('repoModal').classList.add('open');
+  setTimeout(()=>document.getElementById('repoInput').focus(), 100);
+}
+function closeRepoModal() { document.getElementById('repoModal').classList.remove('open'); }
+function saveRepoRoot() {
+  repoRoot=document.getElementById('repoInput').value.trim();
+  save(S_REPO, repoRoot);
+  closeRepoModal();
+  if(openCardId) refreshDrawer(openCardId);
+}
+document.getElementById('repoModal').addEventListener('click',e=>{
+  if(e.target===e.currentTarget) closeRepoModal();
+});
+
+// ── Filters ──────────────────────────────────────────────
+document.querySelectorAll('.pill').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    render(btn.dataset.m);
+  });
+});
+
+// ── Reset (Shift+R) / Esc close drawer ───────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') closeDrawer();
+  if(e.shiftKey&&e.key==='R') {
+    if(confirm('Resetar todos os cards para Rascunho? Histórico de revisões será apagado.')) {
+      boardState=defaultBoard(); slaState={}; revState={}; save(S_BOARD,boardState); save(S_SLA,slaState); save(S_REV,revState);
+      render();
+    }
+  }
+});
+
+// ── Auto-refresh SLA ──────────────────────────────────────
+setInterval(()=>{
+  if(Object.values(boardState).some(c=>c==='revisao')) render();
+}, 60000);
+
+// ── Init ─────────────────────────────────────────────────
+render();
+setTimeout(()=>{
+  const h=document.createElement('div');
+  h.style.cssText='position:fixed;bottom:14px;left:28px;font-size:.68rem;color:#334155;pointer-events:none;';
+  h.textContent='clique para abrir · arraste para mover · Esc para fechar painel';
+  document.body.appendChild(h);
+  setTimeout(()=>{ h.style.transition='opacity 1.2s'; h.style.opacity='0'; },4000);
+},800);
+</script>
+</body>
+</html>

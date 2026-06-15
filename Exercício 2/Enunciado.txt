@@ -1,0 +1,5 @@
+ Usando o **Claude**, defina um processo de governança de specs que cubra: quem cria cada tipo de spec (requirements pelo Product Specialist, plan pelo Tech Lead, tasks pelo Dev com apoio do Copilot), como as specs são nomeadas e versionadas, onde ficam no repositório, e como mudanças são rastreadas.
+
+2. Usando o **Claude Cowork**, crie um board de tracking (template de kanban ou tabela) que permita acompanhar o status de cada spec: Rascunho → Em Revisão → Aprovada → Em Implementação → Validada. Inclua os 5 módulos como itens iniciais.
+
+3. Defina o que acontece quando uma spec precisa mudar depois de já estar em implementação (change management).
