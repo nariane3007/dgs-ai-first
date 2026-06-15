@@ -1,0 +1,11 @@
+**Tarefa:**
+1. Usando o **Claude**, elabore um fluxo de trabalho que mapeie, para cada papel do time, quais ferramentas de IA usa e em qual etapa do ciclo (Spec → Plan → Tasks → Implement → Review → Deploy).
+
+2. Usando o **Claude Cowork**, crie um template de checklist de validation gates — pontos onde um humano obrigatoriamente revisa e aprova antes de avançar. O checklist deve incluir ao menos:
+   - Gate entre Spec e Plan (quem aprova a spec antes de gerar o plano?)
+   - Gate entre Tasks geradas por IA e início de implementação (quem valida que as tasks fazem sentido?)
+   - Gate entre código gerado por agente e merge (quem faz code review?)
+   - Gate entre testes gerados por IA e deploy (quem valida que os testes são suficientes?)
+
+3. Para cada gate, defina: quem aprova, o que verifica, quanto tempo tem, e o que acontece se reprovar.
+

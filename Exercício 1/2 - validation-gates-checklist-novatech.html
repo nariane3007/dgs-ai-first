@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validation Gates Checklist — NovaTech Assistant</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root {
+    --db1-blue: #0057B8;
+    --db1-dark: #002F6C;
+    --gate1: #7C3AED;
+    --gate2: #0369A1;
+    --gate3: #0F766E;
+    --gate4: #B45309;
+    --approved: #16A34A;
+    --rejected: #DC2626;
+    --pending: #6B7280;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --muted: #64748B;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, var(--db1-dark) 0%, var(--db1-blue) 100%);
+    color: white;
+    padding: 28px 40px 22px;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+  .project-tag {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+  }
+  .meta-chips {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.9);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .chip strong { color: white; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .progress-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+  }
+  .pipe-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+  .pipe-step .step-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .pipe-step .step-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+  }
+  .pipe-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px;
+    z-index: 1;
+  }
+  .pipe-gate .gate-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: white;
+    font-weight: 700;
+  }
+  .pipe-gate .gate-num {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .g1 { background: var(--gate1); }
+  .g1t { color: var(--gate1); }
+  .g2 { background: var(--gate2); }
+  .g2t { color: var(--gate2); }
+  .g3 { background: var(--gate3); }
+  .g3t { color: var(--gate3); }
+  .g4 { background: var(--gate4); }
+  .g4t { color: var(--gate4); }
+
+  /* ── MAIN ── */
+  .main { padding: 28px 40px; max-width: 1100px; margin: 0 auto; }
+
+  /* ── GATE CARD ── */
+  .gate-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .gate-header {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--border);
+  }
+  .gate-accent {
+    width: 6px;
+    flex-shrink: 0;
+  }
+  .gate-header-content {
+    padding: 16px 20px;
+    flex: 1;
+  }
+  .gate-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .gate-badge {
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .gate-arrow {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .gate-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .gate-tagline {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .gate-meta-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .gate-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+  }
+  .gate-meta-icon { font-size: 14px; }
+  .gate-meta-label { color: var(--muted); }
+  .gate-meta-value { font-weight: 600; color: var(--text); }
+
+  /* ── STATUS SELECTOR ── */
+  .gate-status-area {
+    padding: 12px 20px;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 140px;
+    background: #FAFBFC;
+  }
+  .gate-status-area label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .status-select {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    background: white;
+    cursor: pointer;
+    width: 120px;
+    text-align: center;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.2s;
+  }
+  .status-select:focus { outline: none; }
+
+  /* ── BODY ── */
+  .gate-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .gate-section {
+    padding: 18px 20px;
+    border-right: 1px solid var(--border);
+  }
+  .gate-section:last-child { border-right: none; }
+  .gate-section:nth-child(3),
+  .gate-section:nth-child(4) {
+    border-top: 1px solid var(--border);
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-icon { font-size: 14px; }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .check-box {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .check-box.checked {
+    background: var(--approved);
+    border-color: var(--approved);
+    color: white;
+  }
+  .check-box.checked::after { content: '✓'; font-size: 11px; font-weight: 700; }
+  .check-text { flex: 1; }
+  .check-text .mandatory {
+    font-size: 10px;
+    background: #FEF3C7;
+    color: #92400E;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  /* ── APPROVERS ── */
+  .approver-list { display: flex; flex-direction: column; gap: 8px; }
+  .approver-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .approver-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .approver-info { flex: 1; }
+  .approver-name { font-weight: 600; font-size: 13px; }
+  .approver-role {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .approver-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .tag-obrigatorio { background: #FEE2E2; color: #991B1B; }
+  .tag-co-autor { background: #EDE9FE; color: #5B21B6; }
+  .tag-co-aprovador { background: #DBEAFE; color: #1E40AF; }
+
+  /* APPROVER SIGNATURE */
+  .signature-field {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+  .sig-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .sig-input-row { display: flex; gap: 6px; }
+  .sig-input {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    flex: 1;
+    background: white;
+  }
+  .sig-input:focus { outline: none; border-color: var(--db1-blue); }
+
+  /* ── REJECTION PANEL ── */
+  .rejection-panel {
+    background: #FFF5F5;
+    border-top: 1px solid #FCA5A5;
+    padding: 14px 20px;
+    display: none;
+  }
+  .rejection-panel.visible { display: block; }
+  .rejection-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--rejected);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .rejection-steps { list-style: none; counter-reset: step-counter; }
+  .rejection-steps li {
+    counter-increment: step-counter;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .rejection-steps li::before {
+    content: counter(step-counter);
+    width: 18px;
+    height: 18px;
+    background: var(--rejected);
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .rejection-blocker {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    background: #FEE2E2;
+    color: #991B1B;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-top: 6px;
+  }
+
+  /* ── FOOTER BAR ── */
+  .gate-footer {
+    background: #F8FAFC;
+    border-top: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .gate-footer-left { display: flex; align-items: center; gap: 6px; }
+  .time-chip {
+    background: #FEF9C3;
+    color: #713F12;
+    border: 1px solid #FDE68A;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .time-sla-label { color: var(--muted); }
+  .progress-count { font-size: 12px; font-weight: 600; color: var(--text); }
+
+  /* ── FOOTER GLOBAL ── */
+  .footer {
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 18px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+  .footer-legend { display: flex; gap: 16px; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ── EXPORT BUTTON ── */
+  .export-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--db1-blue);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 22px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(0,87,184,0.35);
+    z-index: 1000;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .export-fab:hover { background: var(--db1-dark); transform: translateY(-1px); }
+  .export-fab:active { transform: translateY(0); }
+  .export-fab.loading { opacity: 0.7; cursor: wait; }
+
+  /* ── EXPORT SNAPSHOT (visível só no PDF) ── */
+  .export-snapshot { display: none; }
+
+  /* Esconder no PDF elementos interativos, mostrar versão estática */
+  body.exporting .export-fab { display: none !important; }
+  body.exporting .gate-status-area { display: none !important; }
+  body.exporting .scope-bar { display: none !important; }
+  body.exporting .sig-input { border: none; background: transparent; }
+  body.exporting .check-box { pointer-events: none; }
+  body.exporting .rejection-panel { display: block !important; }
+  body.exporting .export-snapshot { display: block; }
+
+  /* ── SCOPE BAR ── */
+  .scope-bar {
+    background: white;
+    border-bottom: 2px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .scope-bar-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .scope-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .scope-btn {
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: 8px;
+    padding: 7px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .scope-btn:hover { border-color: var(--db1-blue); color: var(--db1-blue); }
+  .scope-btn.active {
+    border-color: var(--db1-blue);
+    background: var(--db1-blue);
+    color: white;
+  }
+  .scope-btn .scope-sub {
+    font-size: 10px;
+    font-weight: 400;
+    opacity: 0.8;
+  }
+  .scope-sla-preview {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+    align-items: center;
+  }
+  .sla-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+  }
+  .sla-preview-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .sla-preview-val {
+    font-weight: 700;
+    color: var(--text);
+  }
+  .sla-preview-label { color: var(--muted); }
+  .scope-hint {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; }
+    .gate-status-area { display: none; }
+    .rejection-panel { display: block !important; }
+    .gate-footer { display: none; }
+    .footer { display: none; }
+    .check-box { border-color: #999 !important; background: none !important; }
+    .check-box::after { content: '' !important; }
+  }
+
+  @media (max-width: 700px) {
+    .main { padding: 16px; }
+    .header { padding: 16px; }
+    .progress-bar-wrap { padding: 10px 16px; }
+    .gate-body { grid-template-columns: 1fr; }
+    .gate-section:nth-child(3) { border-top: 1px solid var(--border); }
+    .gate-section { border-right: none !important; border-bottom: 1px solid var(--border); }
+    .gate-status-area { min-width: unset; flex-direction: row; justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo-area">
+      <div class="logo-badge">DB1</div>
+      <span class="project-tag">NovaTech Assistant · Fase 2 — Estruturação</span>
+    </div>
+  </div>
+  <h1>Validation Gates — Checklist de Aprovação Humana</h1>
+  <div class="header-sub">Nenhuma fase avança sem aprovação explícita. Gates são bloqueantes por design.</div>
+  <div class="meta-chips">
+    <span class="chip">🤖 Workflow <strong>AI First</strong></span>
+    <span class="chip">📋 DGS AI First SDLC</span>
+    <span class="chip">📅 Versão <strong>1.0 · jun/2026</strong></span>
+    <span class="chip">👤 Responsável: <strong>Delivery Manager</strong></span>
+  </div>
+</div>
+
+<!-- PIPELINE VISUAL -->
+<div class="progress-bar-wrap">
+  <span class="progress-label">Pipeline</span>
+  <div class="pipeline">
+    <div class="pipe-step"><span class="step-label">Spec</span><div class="step-bar"></div></div>
+    <div class="pipe-gate">
+      <div class="gate-icon g1">G1</div>
+      <span class="gate-num g1t">Gate 1</span>
+    </div>
+    <div class="pipe-step"><span class="step-label">Plan</span><div class="step-bar"></div></div>
+    <div class="pipe-gate">
+      <div class="gate-icon g2">G2</div>
+      <span class="gate-num g2t">Gate 2</span>
+    </div>
+    <div class="pipe-step"><span class="step-label">Tasks → Impl.</span><div class="step-bar"></div></div>
+    <div class="pipe-gate">
+      <div class="gate-icon g3">G3</div>
+      <span class="gate-num g3t">Gate 3</span>
+    </div>
+    <div class="pipe-step"><span class="step-label">Review</span><div class="step-bar"></div></div>
+    <div class="pipe-gate">
+      <div class="gate-icon g4">G4</div>
+      <span class="gate-num g4t">Gate 4</span>
+    </div>
+    <div class="pipe-step"><span class="step-label" style="color:#16A34A;font-weight:700">🚀 Deploy</span><div class="step-bar" style="background:#BBF7D0"></div></div>
+  </div>
+</div>
+
+<!-- SCOPE CLASSIFIER -->
+<div class="scope-bar">
+  <span class="scope-bar-label">📐 Escopo da entrega</span>
+  <div class="scope-options">
+    <button class="scope-btn" id="scope-p" data-scope="pequeno">
+      🟢 Pequeno
+      <span class="scope-sub">1–3 req · até 5 tasks</span>
+    </button>
+    <button class="scope-btn active" id="scope-m" data-scope="medio">
+      🟡 Médio
+      <span class="scope-sub">4–8 req · 6–15 tasks</span>
+    </button>
+    <button class="scope-btn" id="scope-g" data-scope="grande">
+      🔴 Grande
+      <span class="scope-sub">9+ req · 16+ tasks</span>
+    </button>
+  </div>
+  <div class="scope-sla-preview" id="sla-preview">
+    <span class="sla-preview-label">SLAs ativos:</span>
+    <span class="sla-preview-item"><span class="sla-preview-dot" style="background:var(--gate1)"></span><span class="sla-preview-val" id="prev-g1">1 dia</span><span class="sla-preview-label"> G1</span></span>
+    <span class="sla-preview-item"><span class="sla-preview-dot" style="background:var(--gate2)"></span><span class="sla-preview-val" id="prev-g2">4h</span><span class="sla-preview-label"> G2</span></span>
+    <span class="sla-preview-item"><span class="sla-preview-dot" style="background:var(--gate3)"></span><span class="sla-preview-val" id="prev-g3">24h</span><span class="sla-preview-label"> G3</span></span>
+    <span class="sla-preview-item"><span class="sla-preview-dot" style="background:var(--gate4)"></span><span class="sla-preview-val" id="prev-g4">4h</span><span class="sla-preview-label"> G4</span></span>
+  </div>
+</div>
+
+<!-- EXPORT BUTTON -->
+<button class="export-fab" id="export-btn">
+  📄 Exportar PDF
+</button>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ═══════════════════════════════════ GATE 1 ═══════════════════════════════════ -->
+  <div class="gate-card" id="gate1-card">
+    <div class="gate-header">
+      <div class="gate-accent" style="background:var(--gate1)"></div>
+      <div class="gate-header-content">
+        <div class="gate-title-row">
+          <span class="gate-badge" style="background:var(--gate1)">GATE 1</span>
+          <span class="gate-arrow">Spec → Plan</span>
+          <span class="gate-title">Validação da Especificação</span>
+        </div>
+        <div class="gate-meta-row">
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">⏱</span>
+            <span class="gate-meta-label">SLA:</span>
+            <span class="gate-meta-value" id="sla-g1-header">1 dia util após entrega do requirements.md</span>
+          </div>
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">📁</span>
+            <span class="gate-meta-label">Artefato gatilho:</span>
+            <span class="gate-meta-value">requirements.md</span>
+          </div>
+        </div>
+      </div>
+      <div class="gate-status-area">
+        <label>Status do Gate</label>
+        <select class="status-select" id="g1-status" onchange="updateGateStatus('g1', this.value)" style="border-color:var(--pending)">
+          <option value="pending">⏳ Pendente</option>
+          <option value="approved">✅ Aprovado</option>
+          <option value="rejected">❌ Reprovado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="gate-body">
+      <!-- O QUE VERIFICA -->
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate1)">
+          <span class="section-icon">🔍</span> O que verificar
+        </div>
+        <ul class="checklist" id="g1-checks">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Cada requisito tem critério de aceite verificável e não ambíguo <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Todos os módulos afetados estão identificados (RAG pipeline, bot Teams, painel web)</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Spec não contradiz nenhum ADR existente (ADR-0001 a ADR-0004) <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Escopo está dentro do que foi validado no Discovery — sem feature creep</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Requisitos não-funcionais estão incluídos (latência, segurança, limites de tokens) <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">QA validou testabilidade dos critérios de aceite antes da aprovação</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Dev Pleno leu o requirements.md e levantou dúvidas de domínio</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- APROVADORES -->
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate1)">
+          <span class="section-icon">👤</span> Quem aprova
+        </div>
+        <div class="approver-list">
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:var(--gate1)">TL</div>
+            <div class="approver-info">
+              <div class="approver-name">Tech Lead</div>
+              <div class="approver-role">Viabilidade técnica + ausência de conflito com ADRs</div>
+            </div>
+            <span class="approver-tag tag-obrigatorio">Obrigatório</span>
+          </div>
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:#9333EA">PS</div>
+            <div class="approver-info">
+              <div class="approver-name">Product Specialist</div>
+              <div class="approver-role">Co-autora da spec — valida alinhamento com negócio</div>
+            </div>
+            <span class="approver-tag tag-co-autor">Co-autora</span>
+          </div>
+        </div>
+        <div class="signature-field">
+          <div class="sig-label">Assinatura de aprovação · data e nome</div>
+          <div class="sig-input-row">
+            <input class="sig-input" type="text" placeholder="Tech Lead — nome / data">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="Product Specialist — nome / data">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="Observações (opcional)">
+          </div>
+        </div>
+      </div>
+
+      <!-- SE APROVAR -->
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--approved)">
+          <span class="section-icon">✅</span> Se aprovar — próximos passos
+        </div>
+        <ul class="checklist">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Tech Lead inicia elaboração do <code>plan.md</code> com Claude/Copilot</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">DM atualiza status no Azure DevOps — task "Spec" → Done</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">DM registra data/hora de aprovação e archiva o requirements.md aprovado</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Dev Sênior e Pleno notificados de que o plano está em elaboração</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- SE REPROVAR -->
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--rejected)">
+          <span class="section-icon">❌</span> Se reprovar — protocolo
+        </div>
+        <ul class="rejection-steps">
+          <li>TL documenta itens reprovados com comentários objetivos no PR / documento</li>
+          <li>Product Specialist revisa spec com base nos comentários — sem reescrever do zero</li>
+          <li>Nenhuma linha de plan.md é iniciada até re-aprovação</li>
+          <li>DM ajusta prazo no board e registra motivo do bloqueio</li>
+          <li>Nova rodada de review em até 4h úteis após entrega da revisão</li>
+        </ul>
+        <div class="rejection-blocker">🔒 BLOQUEANTE — plan.md não pode ser iniciado</div>
+      </div>
+    </div>
+
+    <div class="gate-footer">
+      <div class="gate-footer-left">
+        <span class="time-chip" id="sla-g1">⏱ 1 dia útil</span>
+        <span class="time-sla-label">· DM escala para o gestor se SLA for ultrapassado</span>
+      </div>
+      <span class="progress-count" id="g1-progress">0 / 7 itens</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════ GATE 2 ═══════════════════════════════════ -->
+  <div class="gate-card" id="gate2-card">
+    <div class="gate-header">
+      <div class="gate-accent" style="background:var(--gate2)"></div>
+      <div class="gate-header-content">
+        <div class="gate-title-row">
+          <span class="gate-badge" style="background:var(--gate2)">GATE 2</span>
+          <span class="gate-arrow">Tasks → Implement</span>
+          <span class="gate-title">Validação das Tasks Geradas por IA</span>
+        </div>
+        <div class="gate-meta-row">
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">⏱</span>
+            <span class="gate-meta-label">SLA:</span>
+            <span class="gate-meta-value" id="sla-g2-header">4 horas uteis após entrega do tasks.md</span>
+          </div>
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">📁</span>
+            <span class="gate-meta-label">Artefato gatilho:</span>
+            <span class="gate-meta-value">tasks.md</span>
+          </div>
+        </div>
+      </div>
+      <div class="gate-status-area">
+        <label>Status do Gate</label>
+        <select class="status-select" id="g2-status" onchange="updateGateStatus('g2', this.value)" style="border-color:var(--pending)">
+          <option value="pending">⏳ Pendente</option>
+          <option value="approved">✅ Aprovado</option>
+          <option value="rejected">❌ Reprovado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="gate-body">
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate2)">
+          <span class="section-icon">🔍</span> O que verificar
+        </div>
+        <ul class="checklist" id="g2-checks">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Cada task é atômica — concluível em no máximo 1 dia útil <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Toda task tem critério de "done" explícito e verificável <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Existe task de teste correspondente para cada task de implementação <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Dependências entre tasks estão mapeadas e não criam bloqueio circular</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Nenhuma task exige decisão arquitetural ainda não resolvida em ADR</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Tasks fazem sentido para o Dev Pleno (não apenas para o Sênior)</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Cobertura total do plan.md — nenhum módulo ficou sem tasks</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Tasks foram criadas no Azure DevOps pelo DM após geração pela IA</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate2)">
+          <span class="section-icon">👤</span> Quem aprova
+        </div>
+        <div class="approver-list">
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:var(--gate2)">TL</div>
+            <div class="approver-info">
+              <div class="approver-name">Tech Lead</div>
+              <div class="approver-role">Verifica atomicidade, cobertura e ausência de bloqueios arquiteturais</div>
+            </div>
+            <span class="approver-tag tag-obrigatorio">Obrigatório</span>
+          </div>
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:#0369A1">QA</div>
+            <div class="approver-info">
+              <div class="approver-name">QA</div>
+              <div class="approver-role">Valida que há task de teste para cada task de implementação</div>
+            </div>
+            <span class="approver-tag tag-co-aprovador">Consultor</span>
+          </div>
+        </div>
+        <div class="signature-field">
+          <div class="sig-label">Assinatura de aprovação · data e nome</div>
+          <div class="sig-input-row">
+            <input class="sig-input" type="text" placeholder="Tech Lead — nome / data">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="QA consultado — nome / data">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="Observações (opcional)">
+          </div>
+        </div>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--approved)">
+          <span class="section-icon">✅</span> Se aprovar — próximos passos
+        </div>
+        <ul class="checklist">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">DM cria/ativa tasks no board DevOps e faz atribuição (Sênior / Pleno)</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Dev Sênior e Pleno recebem o tasks.md aprovado e iniciam sprint</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">QA inicia geração paralela de casos de teste com base nas tasks</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">DM registra data/hora de início da implementação no board</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--rejected)">
+          <span class="section-icon">❌</span> Se reprovar — protocolo
+        </div>
+        <ul class="rejection-steps">
+          <li>TL marca tasks reprovadas com label "bloqueada" no documento</li>
+          <li>Dev Sênior refina as tasks bloqueadas — só as indicadas, não o tasks.md inteiro</li>
+          <li>Tasks aprovadas podem iniciar imediatamente; apenas as bloqueadas ficam pausadas</li>
+          <li>Nova rodada de review das tasks corrigidas em até 2h úteis</li>
+          <li>DM registra motivo do bloqueio por task no board DevOps</li>
+        </ul>
+        <div class="rejection-blocker">🔒 BLOQUEANTE PARCIAL — apenas tasks reprovadas ficam bloqueadas</div>
+      </div>
+    </div>
+
+    <div class="gate-footer">
+      <div class="gate-footer-left">
+        <span class="time-chip" id="sla-g2">⏱ 4 horas úteis</span>
+        <span class="time-sla-label">· Bloqueio parcial — tasks aprovadas seguem em paralelo</span>
+      </div>
+      <span class="progress-count" id="g2-progress">0 / 8 itens</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════ GATE 3 ═══════════════════════════════════ -->
+  <div class="gate-card" id="gate3-card">
+    <div class="gate-header">
+      <div class="gate-accent" style="background:var(--gate3)"></div>
+      <div class="gate-header-content">
+        <div class="gate-title-row">
+          <span class="gate-badge" style="background:var(--gate3)">GATE 3</span>
+          <span class="gate-arrow">Código gerado por agente → Merge</span>
+          <span class="gate-title">Code Review — PR Obrigatório</span>
+        </div>
+        <div class="gate-meta-row">
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">⏱</span>
+            <span class="gate-meta-label">SLA:</span>
+            <span class="gate-meta-value" id="sla-g3-header">24 horas uteis após abertura do PR</span>
+          </div>
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">🔗</span>
+            <span class="gate-meta-label">Mecanismo:</span>
+            <span class="gate-meta-value">Branch protection rule no GitHub (1 approval obrigatório)</span>
+          </div>
+        </div>
+      </div>
+      <div class="gate-status-area">
+        <label>Status do Gate</label>
+        <select class="status-select" id="g3-status" onchange="updateGateStatus('g3', this.value)" style="border-color:var(--pending)">
+          <option value="pending">⏳ Pendente</option>
+          <option value="approved">✅ Aprovado</option>
+          <option value="rejected">❌ Reprovado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="gate-body">
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate3)">
+          <span class="section-icon">🔍</span> O que verificar
+        </div>
+        <ul class="checklist" id="g3-checks">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Código segue as coding standards definidas no AGENTS.md do repositório <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Dev leu e entende o código gerado pela IA — não é "vibe coding" <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Testes unitários presentes e todos passando no CI <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Sem credenciais, connection strings ou dados hardcoded <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Tipos TypeScript corretos — sem <code>any</code> não justificado por comentário</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Descrição do PR explica contexto, decisões tomadas e limitações conhecidas</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Código está dentro do escopo da task — sem funcionalidade extra não aprovada</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Logs e tratamento de erro adequados para o pipeline Azure Functions</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">QA revisou cobertura de testes e cenários de falha do Discovery no PR</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate3)">
+          <span class="section-icon">👤</span> Quem aprova
+        </div>
+        <div class="approver-list">
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:var(--gate3)">TL</div>
+            <div class="approver-info">
+              <div class="approver-name">Tech Lead</div>
+              <div class="approver-role">Único approver obrigatório no PR — responsável pelo merge</div>
+            </div>
+            <span class="approver-tag tag-obrigatorio">Único approver</span>
+          </div>
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:#0F766E">QA</div>
+            <div class="approver-info">
+              <div class="approver-name">QA</div>
+              <div class="approver-role">Revisa cobertura de testes e cenários de falha no PR</div>
+            </div>
+            <span class="approver-tag tag-co-aprovador">Revisor</span>
+          </div>
+        </div>
+        <div class="signature-field">
+          <div class="sig-label">Aprovação no PR · referência do PR</div>
+          <div class="sig-input-row">
+            <input class="sig-input" type="text" placeholder="Número do PR (ex: #42)">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="Tech Lead — nome / data de approval">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="Observações ou ressalvas">
+          </div>
+        </div>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--approved)">
+          <span class="section-icon">✅</span> Se aprovar — próximos passos
+        </div>
+        <ul class="checklist">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">TL faz merge do PR na branch de staging/main</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">CI/CD executa pipeline completo pós-merge</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">DM atualiza status da task no board — aguarda Gate 4</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">QA inicia validação final dos testes para Gate 4</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--rejected)">
+          <span class="section-icon">❌</span> Se reprovar — protocolo
+        </div>
+        <ul class="rejection-steps">
+          <li>TL documenta comments no PR com o que precisa mudar — específico e acionável</li>
+          <li>Dev (autor do PR) resolve os comentários — sem criar novo PR, usa o mesmo branch</li>
+          <li>Dev solicita re-review após as correções via GitHub</li>
+          <li>Merge bloqueado automaticamente pela branch protection rule no GitHub</li>
+          <li>DM monitora: se review travar por mais de 24h, escala para o gestor do projeto</li>
+        </ul>
+        <div class="rejection-blocker">🔒 BLOQUEANTE — merge impedido por branch protection</div>
+      </div>
+    </div>
+
+    <div class="gate-footer">
+      <div class="gate-footer-left">
+        <span class="time-chip" id="sla-g3">⏱ 24 horas úteis</span>
+        <span class="time-sla-label">· DM escala se review travar além do SLA</span>
+      </div>
+      <span class="progress-count" id="g3-progress">0 / 9 itens</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════ GATE 4 ═══════════════════════════════════ -->
+  <div class="gate-card" id="gate4-card">
+    <div class="gate-header">
+      <div class="gate-accent" style="background:var(--gate4)"></div>
+      <div class="gate-header-content">
+        <div class="gate-title-row">
+          <span class="gate-badge" style="background:var(--gate4)">GATE 4</span>
+          <span class="gate-arrow">Testes gerados por IA → Deploy</span>
+          <span class="gate-title">Validação de Suficiência de Testes</span>
+        </div>
+        <div class="gate-meta-row">
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">⏱</span>
+            <span class="gate-meta-label">SLA:</span>
+            <span class="gate-meta-value" id="sla-g4-header">4 horas uteis após pipeline CI verde</span>
+          </div>
+          <div class="gate-meta-item">
+            <span class="gate-meta-icon">📊</span>
+            <span class="gate-meta-label">Threshold:</span>
+            <span class="gate-meta-value">≥ 80% cobertura nas camadas de serviço</span>
+          </div>
+        </div>
+      </div>
+      <div class="gate-status-area">
+        <label>Status do Gate</label>
+        <select class="status-select" id="g4-status" onchange="updateGateStatus('g4', this.value)" style="border-color:var(--pending)">
+          <option value="pending">⏳ Pendente</option>
+          <option value="approved">✅ Aprovado</option>
+          <option value="rejected">❌ Reprovado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="gate-body">
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate4)">
+          <span class="section-icon">🔍</span> O que verificar
+        </div>
+        <ul class="checklist" id="g4-checks">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Todos os cenários de falha mapeados no Discovery estão cobertos <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Testes de integração passando — incluindo mock de Azure AI Search <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Casos de alucinação e chunks contraditórios testados (Anexo B) <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Cobertura de testes ≥ 80% nas camadas de serviço (relatório de coverage) <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Nenhum teste e2e crítico falhando <span class="mandatory">obrigatório</span></span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Testes gerados pela IA foram revisados por humano — não apenas "gerados e commitados"</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Smoke test manual executado em staging pelo QA antes da aprovação</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Product Specialist validou comportamento funcional via demo ou painel web</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--gate4)">
+          <span class="section-icon">👤</span> Quem aprova
+        </div>
+        <div class="approver-list">
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:var(--gate4)">QA</div>
+            <div class="approver-info">
+              <div class="approver-name">QA</div>
+              <div class="approver-role">Aprovador primário de suficiência de testes — sign-off de qualidade</div>
+            </div>
+            <span class="approver-tag tag-obrigatorio">Approver primário</span>
+          </div>
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:#B45309">TL</div>
+            <div class="approver-info">
+              <div class="approver-name">Tech Lead</div>
+              <div class="approver-role">Autoriza o deploy após sign-off do QA — supervisiona CD</div>
+            </div>
+            <span class="approver-tag tag-obrigatorio">Autoriza deploy</span>
+          </div>
+          <div class="approver-row">
+            <div class="approver-avatar" style="background:#9333EA">PS</div>
+            <div class="approver-info">
+              <div class="approver-name">Product Specialist</div>
+              <div class="approver-role">Aprova release notes. Valida smoke test do fluxo principal</div>
+            </div>
+            <span class="approver-tag tag-co-autor">Sign-off</span>
+          </div>
+        </div>
+        <div class="signature-field">
+          <div class="sig-label">Assinatura de aprovação · data e nome</div>
+          <div class="sig-input-row">
+            <input class="sig-input" type="text" placeholder="QA — nome / data">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="Tech Lead — nome / data">
+          </div>
+          <div class="sig-input-row" style="margin-top:4px">
+            <input class="sig-input" type="text" placeholder="Product Specialist — nome / data">
+          </div>
+        </div>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--approved)">
+          <span class="section-icon">🚀</span> Se aprovar — deploy
+        </div>
+        <ul class="checklist">
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">TL autoriza e supervisiona o pipeline de CD</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">Dev Pleno acompanha o deploy como observador — aprende o processo</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">DM gera release notes e comunicado via Claude Cowork</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">QA executa smoke test pós-deploy em produção</span>
+          </li>
+          <li>
+            <div class="check-box" onclick="toggleCheck(this)"></div>
+            <span class="check-text">DM comunica stakeholders NovaTech com release notes aprovadas pelo PS</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="gate-section">
+        <div class="section-title" style="color:var(--rejected)">
+          <span class="section-icon">❌</span> Se reprovar — protocolo
+        </div>
+        <ul class="rejection-steps">
+          <li>QA documenta os testes faltantes ou falhos com precisão</li>
+          <li>Dev escreve os testes faltantes ou corrige os falhos indicados</li>
+          <li>Deploy bloqueado — TL e DM notificados imediatamente para ajuste de cronograma</li>
+          <li>Nova rodada de validação dos testes corrigidos pelo QA (sem passar pelo Gate 3 novamente, exceto se o fix exigir mudança de código)</li>
+          <li>DM re-alinha prazo de deploy com stakeholders NovaTech</li>
+        </ul>
+        <div class="rejection-blocker">🔒 BLOQUEANTE — deploy impedido. TL e DM notificados</div>
+      </div>
+    </div>
+
+    <div class="gate-footer">
+      <div class="gate-footer-left">
+        <span class="time-chip" id="sla-g4">⏱ 4 horas úteis</span>
+        <span class="time-sla-label">· Após CI verde · Cobertura mínima: 80%</span>
+      </div>
+      <span class="progress-count" id="g4-progress">0 / 8 itens</span>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--gate1)"></div>
+      <span>Gate 1 — Spec</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--gate2)"></div>
+      <span>Gate 2 — Tasks</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--gate3)"></div>
+      <span>Gate 3 — Code Review</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--gate4)"></div>
+      <span>Gate 4 — Deploy</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--rejected)"></div>
+      <span>Reprovado = bloqueante</span>
+    </div>
+  </div>
+  <span>DB1 Global Software · NovaTech Assistant · DGS AI First SDLC · v1.0</span>
+</div>
+
+<script>
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+    updateProgressForCard(el.closest('.gate-card'));
+  }
+
+  function updateProgressForCard(card) {
+    if (!card) return;
+    const gateId = card.id.replace('-card', '');
+    const checks = card.querySelectorAll('.check-box');
+    const checked = card.querySelectorAll('.check-box.checked');
+    const progressEl = document.getElementById(gateId + '-progress');
+    if (progressEl) {
+      progressEl.textContent = checked.length + ' / ' + checks.length + ' itens';
+      if (checked.length === checks.length) {
+        progressEl.style.color = 'var(--approved)';
+      } else {
+        progressEl.style.color = 'var(--text)';
+      }
+    }
+  }
+
+  function updateGateStatus(gateId, value) {
+    const select = document.getElementById(gateId + '-status');
+    if (value === 'approved') {
+      select.style.borderColor = 'var(--approved)';
+      select.style.color = 'var(--approved)';
+    } else if (value === 'rejected') {
+      select.style.borderColor = 'var(--rejected)';
+      select.style.color = 'var(--rejected)';
+    } else {
+      select.style.borderColor = 'var(--pending)';
+      select.style.color = 'var(--text)';
+    }
+  }
+
+  // Init counts
+  document.querySelectorAll('.gate-card').forEach(card => updateProgressForCard(card));
+
+  // ── SCOPE SLA LOGIC ──
+  var SLA_TABLE = {
+    pequeno: {
+      g1: '4h uteis',  h1: '4h uteis apos entrega do requirements.md',
+      g2: '2h uteis',  h2: '2h uteis apos entrega do tasks.md',
+      g3: '8h uteis',  h3: '8h uteis apos abertura do PR',
+      g4: '2h uteis',  h4: '2h uteis apos pipeline CI verde',
+      p1: '4h', p2: '2h', p3: '8h', p4: '2h'
+    },
+    medio: {
+      g1: '1 dia util',  h1: '1 dia util apos entrega do requirements.md',
+      g2: '4h uteis',    h2: '4h uteis apos entrega do tasks.md',
+      g3: '24h uteis',   h3: '24h uteis apos abertura do PR',
+      g4: '4h uteis',    h4: '4h uteis apos pipeline CI verde',
+      p1: '1 dia', p2: '4h', p3: '24h', p4: '4h'
+    },
+    grande: {
+      g1: '2 dias uteis', h1: '2 dias uteis apos entrega do requirements.md',
+      g2: '1 dia util',   h2: '1 dia util apos entrega do tasks.md',
+      g3: '48h uteis',    h3: '48h uteis apos abertura do PR',
+      g4: '8h uteis',     h4: '8h uteis apos pipeline CI verde',
+      p1: '2 dias', p2: '1 dia', p3: '48h', p4: '8h'
+    }
+  };
+
+  function applyScope(scope) {
+    document.querySelectorAll('.scope-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-scope') === scope);
+    });
+    var sla = SLA_TABLE[scope];
+    // Chips no rodapé de cada gate
+    document.getElementById('sla-g1').textContent = '⏱ ' + sla.g1;
+    document.getElementById('sla-g2').textContent = '⏱ ' + sla.g2;
+    document.getElementById('sla-g3').textContent = '⏱ ' + sla.g3;
+    document.getElementById('sla-g4').textContent = '⏱ ' + sla.g4;
+    // Texto no cabeçalho de cada gate
+    document.getElementById('sla-g1-header').textContent = sla.h1;
+    document.getElementById('sla-g2-header').textContent = sla.h2;
+    document.getElementById('sla-g3-header').textContent = sla.h3;
+    document.getElementById('sla-g4-header').textContent = sla.h4;
+    // Preview na barra de escopo
+    document.getElementById('prev-g1').textContent = sla.p1;
+    document.getElementById('prev-g2').textContent = sla.p2;
+    document.getElementById('prev-g3').textContent = sla.p3;
+    document.getElementById('prev-g4').textContent = sla.p4;
+  }
+
+  document.querySelectorAll('.scope-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      applyScope(this.getAttribute('data-scope'));
+    });
+  });
+
+  // Init with medio (default)
+  applyScope('medio');
+
+  // ── PDF EXPORT ──
+  document.getElementById('export-btn').addEventListener('click', function() {
+    var btn = this;
+    btn.textContent = '⏳ Gerando PDF...';
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    // Captura estado atual dos campos antes de exportar
+    var statusLabels = { pending: 'Pendente', approved: 'Aprovado', rejected: 'Reprovado' };
+    var snapLines = ['SNAPSHOT — Estado no momento da exportação\n'];
+    ['g1','g2','g3','g4'].forEach(function(g, i) {
+      var sel = document.getElementById(g + '-status');
+      var status = sel ? statusLabels[sel.value] || sel.value : '—';
+      var checked = document.querySelectorAll('#gate' + (i+1) + '-card .check-box.checked').length;
+      var total   = document.querySelectorAll('#gate' + (i+1) + '-card .check-box').length;
+      snapLines.push('Gate ' + (i+1) + ': ' + status + ' | ' + checked + '/' + total + ' itens marcados');
+    });
+
+    // Injeta bloco de snapshot no topo
+    var snapDiv = document.createElement('div');
+    snapDiv.className = 'export-snapshot';
+    snapDiv.style.cssText = 'background:#F0F4FF;border:1px solid #C7D7F5;border-radius:8px;padding:12px 18px;margin:0 40px 12px;font-size:12px;line-height:1.8;color:#1E293B;';
+    snapDiv.innerHTML = '<strong style="font-size:13px;">📋 ' + snapLines[0] + '</strong>' +
+      snapLines.slice(1).map(function(l){ return '<div>' + l + '</div>'; }).join('') +
+      '<div style="margin-top:6px;color:#64748B;">Exportado em: ' + new Date().toLocaleString('pt-BR') + '</div>';
+    document.querySelector('.main').insertAdjacentElement('beforebegin', snapDiv);
+
+    document.body.classList.add('exporting');
+
+    var opt = {
+      margin: [8, 6, 8, 6],
+      filename: 'validation-gates-novatech-' + new Date().toISOString().slice(0,10) + '.pdf',
+      image: { type: 'jpeg', quality: 0.97 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(document.body).save().then(function() {
+      document.body.classList.remove('exporting');
+      snapDiv.remove();
+      btn.innerHTML = '✅ PDF gerado!';
+      btn.classList.remove('loading');
+      setTimeout(function() {
+        btn.innerHTML = '📄 Exportar PDF';
+        btn.disabled = false;
+      }, 2500);
+    }).catch(function(err) {
+      document.body.classList.remove('exporting');
+      snapDiv.remove();
+      btn.innerHTML = '⚠️ Erro — tente novamente';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    });
+  });
+</script>
+
+</body>
+</html>
