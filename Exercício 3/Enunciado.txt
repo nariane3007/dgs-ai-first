@@ -1,0 +1,7 @@
+**Tarefa:**
+Usando o **Claude** e referenciando o **Anexo C** para caminhos corretos, escreva a seção **"Project Management Rules"** do AGENTS.md. Esta seção será lida por agentes de IA quando gerarem artefatos de gestão, tasks, ou documentação. Ela deve conter:
+
+1. Regras de nomenclatura de tasks e issues (ex: formato do título, labels obrigatórias).
+2. Regras de documentação de decisões (ex: toda decisão técnica ou de escopo deve ser registrada como ADR em `/docs/adr/`).
+3. Definição dos validation gates em formato consumível por agentes.
+4. Restrições de comunicação que afetam geração de artefatos (ex: "documentos de status devem ser em português, código e comments em inglês").
