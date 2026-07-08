@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard de Readiness — Go-Live NovaTech</title>
+<style>
+  :root{
+    --verde:#16a34a; --verde-bg:#dcfce7;
+    --amarelo:#d97706; --amarelo-bg:#fef3c7;
+    --vermelho:#dc2626; --vermelho-bg:#fee2e2;
+    --azul:#1e3a8a;
+    --cinza:#6b7280;
+    --borda:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Segoe UI',Arial,sans-serif;
+    background:#f4f6f8;
+    margin:0;
+    padding:32px;
+    color:#1f2937;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+  header{margin-bottom:24px;}
+  h1{font-size:26px;margin:0 0 4px;color:var(--azul);}
+  .sub{color:var(--cinza);font-size:14px;margin:0;}
+  .note{
+    background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;
+    padding:12px 16px;font-size:13px;color:#3730a3;margin:16px 0 24px;
+  }
+  .summary{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px;
+  }
+  .card{
+    background:#fff;border:1px solid var(--borda);border-radius:10px;padding:16px;text-align:center;
+  }
+  .card .num{font-size:28px;font-weight:700;}
+  .card .lbl{font-size:12px;color:var(--cinza);margin-top:4px;}
+  .card.verde .num{color:var(--verde);}
+  .card.amarelo .num{color:var(--amarelo);}
+  .card.vermelho .num{color:var(--vermelho);}
+  .card.total .num{color:var(--azul);}
+  .progress-wrap{background:#fff;border:1px solid var(--borda);border-radius:10px;padding:16px 20px;margin-bottom:28px;}
+  .progress-wrap .top{display:flex;justify-content:space-between;font-size:13px;color:var(--cinza);margin-bottom:8px;}
+  .bar{height:14px;border-radius:7px;background:#e5e7eb;overflow:hidden;display:flex;}
+  .bar span{height:100%;}
+  .layer{
+    background:#fff;border:1px solid var(--borda);border-radius:10px;margin-bottom:20px;overflow:hidden;
+  }
+  .layer-head{
+    background:var(--azul);color:#fff;padding:12px 18px;font-size:15px;font-weight:600;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .layer-head .tag{font-size:11px;background:rgba(255,255,255,.15);padding:3px 8px;border-radius:12px;font-weight:400;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{
+    text-align:left;background:#f9fafb;color:var(--cinza);font-size:11px;
+    text-transform:uppercase;letter-spacing:.03em;padding:10px 16px;border-bottom:1px solid var(--borda);
+  }
+  td{padding:10px 16px;border-bottom:1px solid #f1f5f9;vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .crit{max-width:420px;}
+  .badge{
+    display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;
+  }
+  .badge.bloqueante{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+  .badge.desejavel{background:#f3f4f6;color:#4b5563;border:1px solid #e5e7eb;}
+  .badge.hitl{background:#ede9fe;color:#5b21b6;border:1px solid #ddd6fe;margin-left:4px;}
+  .status{display:flex;align-items:center;gap:6px;font-weight:600;font-size:12.5px;white-space:nowrap;}
+  .dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .dot.verde{background:var(--verde);}
+  .dot.amarelo{background:var(--amarelo);}
+  .dot.vermelho{background:var(--vermelho);}
+  .status.verde{color:var(--verde);}
+  .status.amarelo{color:var(--amarelo);}
+  .status.vermelho{color:var(--vermelho);}
+  .desej-row td{color:#6b7280;}
+  .desej-row .status{font-weight:500;}
+  footer{margin-top:24px;font-size:12px;color:var(--cinza);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Dashboard de Readiness — Go-Live NovaTech</h1>
+    <p class="sub">Assistente de IA · Harness de governança · Demo à diretoria: <strong>22/07/2026</strong> · Gerado em 08/07/2026</p>
+  </header>
+
+  <div class="note">
+    <strong>Nota metodológica:</strong> os critérios e a classificação Bloqueante/Desejável vêm diretamente da conversa (Turno 4/10). Como a conversa não atribuiu responsável nem data-alvo a cada item, este dashboard traz sugestões ilustrativas (papel da equipe + data anterior à demo) para exemplificar o formato — ajuste com os nomes e prazos reais do time.
+  </div>
+
+  <div class="summary">
+    <div class="card total"><div class="num">16</div><div class="lbl">Critérios bloqueantes</div></div>
+    <div class="card verde"><div class="num">2</div><div class="lbl">🟢 Prontos</div></div>
+    <div class="card amarelo"><div class="num">2</div><div class="lbl">🟡 Em andamento</div></div>
+    <div class="card vermelho"><div class="num">12</div><div class="lbl">🔴 Não iniciados</div></div>
+    <div class="card total"><div class="num">12,5%</div><div class="lbl">Readiness (bloqueantes)</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="top"><span>Progresso dos critérios bloqueantes</span><span>2 verde · 2 amarelo · 12 vermelho de 16</span></div>
+    <div class="bar">
+      <span style="width:12.5%;background:var(--verde);"></span>
+      <span style="width:12.5%;background:var(--amarelo);"></span>
+      <span style="width:75%;background:var(--vermelho);"></span>
+    </div>
+  </div>
+
+  <!-- LAYER 1 -->
+  <div class="layer">
+    <div class="layer-head"><span>1. Tool Orchestration</span><span class="tag">3 bloqueantes · 2 desejáveis</span></div>
+    <table>
+      <tr><th style="width:40%">Critério</th><th>Classificação</th><th>Status</th><th>Responsável</th><th>Data-alvo</th></tr>
+      <tr>
+        <td class="crit">Query endpoint só busca no índice oficial do Azure AI Search (847 docs); nenhuma chamada a fonte não indexada/auditada.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status verde"><span class="dot verde"></span>Pronto</span></td>
+        <td>Eng. Backend / Plataforma</td>
+        <td>Concluído</td>
+      </tr>
+      <tr>
+        <td class="crit">Nenhuma ação automática de escrita (responder direto, disparar ticket) sem passar por verificação/guardrails.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status verde"><span class="dot verde"></span>Pronto</span></td>
+        <td>Eng. Backend / Plataforma</td>
+        <td>Concluído</td>
+      </tr>
+      <tr>
+        <td class="crit">Falha de ferramenta (ex: timeout do Azure AI Search) tem fallback definido — nunca erro silencioso ou resposta inventada.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. Backend / Plataforma</td>
+        <td>16/07</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Cache de buscas frequentes para reduzir latência.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. Backend / Plataforma</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Orquestração multi-agente (ex: agente que reformula a pergunta antes da busca).</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. Backend / Plataforma</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- LAYER 2 -->
+  <div class="layer">
+    <div class="layer-head"><span>2. Verification Loops</span><span class="tag">3 bloqueantes · 2 desejáveis</span></div>
+    <table>
+      <tr><th style="width:40%">Critério</th><th>Classificação</th><th>Status</th><th>Responsável</th><th>Data-alvo</th></tr>
+      <tr>
+        <td class="crit">Structured output obrigatório: toda resposta valida o schema (answer, source_document, confidence_score); resposta inválida é rejeitada programaticamente.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de IA / ML</td>
+        <td>18/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Suite de regressão re-executada com taxa de erro abaixo do limiar definido (atual: 12% — meta &lt;5%).</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de IA / ML</td>
+        <td>20/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Verificação automática de groundedness: resposta checada contra o(s) chunk(s) citados em source_document.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de IA / ML</td>
+        <td>18/07</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">LLM-as-judge como segunda camada, para priorizar a fila de revisão humana.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de IA / ML</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Métrica automática de qualidade de citação.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de IA / ML</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- LAYER 3 -->
+  <div class="layer">
+    <div class="layer-head"><span>3. Context &amp; Memory</span><span class="tag">3 bloqueantes · 2 desejáveis</span></div>
+    <table>
+      <tr><th style="width:40%">Critério</th><th>Classificação</th><th>Status</th><th>Responsável</th><th>Data-alvo</th></tr>
+      <tr>
+        <td class="crit">Isolamento de contexto por sessão/atendente — sem vazamento entre atendentes-piloto.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status amarelo"><span class="dot amarelo"></span>Em andamento</span></td>
+        <td>Eng. de Dados / Backend</td>
+        <td>13/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Versionamento do índice: resposta reflete a versão vigente do documento-fonte.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de Dados / Backend</td>
+        <td>16/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Confidence score considera também idade/atualidade do chunk, não só similaridade semântica.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de IA / ML</td>
+        <td>18/07</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Memória multi-turno na mesma conversa.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de Dados / Backend</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Personalização por perfil de atendente.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Eng. de Dados / Backend</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- LAYER 4 -->
+  <div class="layer">
+    <div class="layer-head"><span>4. Guardrails</span><span class="tag">4 bloqueantes (2 HITL) · 1 desejável</span></div>
+    <table>
+      <tr><th style="width:38%">Critério</th><th>Classificação</th><th>Status</th><th>Responsável</th><th>Data-alvo</th></tr>
+      <tr>
+        <td class="crit">Guardrails DEVE/NÃO DEVE aplicados como checagem programática (regra/schema), não só instrução de prompt.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status amarelo"><span class="dot amarelo"></span>Em andamento</span></td>
+        <td>Product Specialist + Tech Lead</td>
+        <td>15/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Regras do AGENTS.md (uso de Zod, proibição de logar dado sensível) verificadas em CI antes do merge.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Tech Lead / DevOps</td>
+        <td>14/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Respostas de baixa confiança sobre temas sensíveis/regulatórios roteadas para fila de revisão humana antes de chegar ao atendente.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span><span class="badge hitl">HITL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Product Specialist + Eng. de IA</td>
+        <td>20/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Código gerado por IA que toca dado sensível ou lógica de guardrail passa por revisão humana obrigatória antes do merge.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span><span class="badge hitl">HITL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Tech Lead</td>
+        <td>15/07</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Guardrails de tom/estilo de comunicação.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>Product Specialist</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- LAYER 5 -->
+  <div class="layer">
+    <div class="layer-head"><span>5. Observability</span><span class="tag">3 bloqueantes · 2 desejáveis</span></div>
+    <table>
+      <tr><th style="width:40%">Critério</th><th>Classificação</th><th>Status</th><th>Responsável</th><th>Data-alvo</th></tr>
+      <tr>
+        <td class="crit">Todo request/response logado com campos estruturados e timestamp, sem dado sensível no log.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>SRE / DevOps</td>
+        <td>13/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Alerta automático quando a taxa de respostas de baixa confiança/rejeitadas pelo schema ultrapassa um limiar.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>SRE / DevOps</td>
+        <td>17/07</td>
+      </tr>
+      <tr>
+        <td class="crit">Trilha de auditoria das escalações HITL: quem revisou, o que mudou, quanto tempo levou.</td>
+        <td><span class="badge bloqueante">BLOQUEANTE</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>SRE / DevOps</td>
+        <td>19/07</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Dashboard de tendência da taxa de alucinação.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>SRE / DevOps</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+      <tr class="desej-row">
+        <td class="crit">Monitoramento de custo por consulta.</td>
+        <td><span class="badge desejavel">DESEJÁVEL</span></td>
+        <td><span class="status vermelho"><span class="dot vermelho"></span>Não iniciado</span></td>
+        <td>SRE / DevOps</td>
+        <td>Backlog pós-go-live</td>
+      </tr>
+    </table>
+  </div>
+
+  <footer>Fonte: critérios de go-live definidos em conversa-cenario-3-novatech.md (Turno 4/10) · Status, responsáveis e datas são inferências ilustrativas a partir do estado descrito do projeto.</footer>
+</div>
+</body>
+</html>

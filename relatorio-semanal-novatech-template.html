@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório Semanal — NovaTech | [SEMANA]</title>
+<!--
+  TEMPLATE — Relatório Semanal de Observabilidade do Assistente de IA — NovaTech
+  Como usar: substitua os campos entre [ ] pelos dados da semana e apague/ajuste
+  as linhas que não se aplicarem. Estrutura pensada para caber em 1 página A4.
+-->
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #F5F5F5;
+    color: #2D2D2D;
+    padding: 32px 48px;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #E8000D;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+  .logo { font-size: 1.5rem; font-weight: 800; color: #E8000D; letter-spacing: -1px; }
+  .title-block { text-align: center; }
+  .title-block .titulo { font-size: 1.05rem; font-weight: 700; color: #1A1A2E; }
+  .title-block .cliente { font-size: 0.85rem; color: #888; }
+  .header-meta { text-align: right; font-size: 0.85rem; color: #666; }
+  .header-meta strong { color: #1A1A2E; font-size: 0.95rem; }
+
+  .section-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    margin-bottom: 10px;
+    margin-top: 4px;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: white;
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .kpi-dim {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #B0B0B0;
+    margin-bottom: 4px;
+  }
+  .kpi-nome { font-size: 0.85rem; color: #555; margin-bottom: 6px; }
+  .kpi-row { display: flex; align-items: baseline; justify-content: space-between; }
+  .kpi-valor { font-size: 1.7rem; font-weight: 800; color: #1A1A2E; }
+  .trend {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .trend.melhorou { background: #E7F7EE; color: #1A7F4E; }
+  .trend.piorou { background: #FDEAEA; color: #C0392B; }
+  .trend.estavel { background: #EEEEF2; color: #66667A; }
+  .kpi-anterior { font-size: 0.72rem; color: #AAA; margin-top: 4px; }
+
+  .two-col { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-bottom: 18px; }
+
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .card h2 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    margin-bottom: 10px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #999;
+    padding: 6px 4px;
+    border-bottom: 1px solid #eee;
+  }
+  td { padding: 7px 4px; border-bottom: 1px solid #f5f5f5; font-size: 0.85rem; }
+
+  .status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .status-pendente { background: #FFF4E5; color: #B45309; }
+  .status-andamento { background: #E8F0FE; color: #1D4ED8; }
+  .status-concluida { background: #E7F7EE; color: #1A7F4E; }
+
+  .alerta-linha { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f5f5f5; font-size: 0.85rem; }
+  .alerta-linha:last-child { border-bottom: none; }
+  .alerta-cond { color: #555; }
+  .alerta-ok { color: #1A7F4E; font-weight: 700; font-size: 0.78rem; }
+  .alerta-disparado { color: #C0392B; font-weight: 700; font-size: 0.78rem; }
+
+  footer {
+    text-align: center;
+    color: #bbb;
+    font-size: 0.75rem;
+    margin-top: 20px;
+  }
+
+  @media print {
+    body { padding: 10mm 14mm; }
+    .kpi-card, .card { box-shadow: none; border: 1px solid #eee; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">DB1</div>
+    <div class="title-block">
+      <div class="titulo">Relatório Semanal — Assistente de IA</div>
+      <div class="cliente">Cliente: NovaTech</div>
+    </div>
+    <div class="header-meta">
+      <div>Semana de referência</div>
+      <strong>[DD/MM] a [DD/MM/AAAA]</strong>
+    </div>
+  </header>
+
+  <div class="section-label">KPIs Principais</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-dim">Qualidade</div>
+      <div class="kpi-nome">Feedback negativo dos atendentes</div>
+      <div class="kpi-row">
+        <span class="kpi-valor">[X]%</span>
+        <span class="trend melhorou">[▼ melhorou / ▲ piorou / ▬ estável]</span>
+      </div>
+      <div class="kpi-anterior">Semana anterior: [Y]%</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-dim">Qualidade</div>
+      <div class="kpi-nome">Taxa de falha no retrieval</div>
+      <div class="kpi-row">
+        <span class="kpi-valor">[X]%</span>
+        <span class="trend piorou">[▼ melhorou / ▲ piorou / ▬ estável]</span>
+      </div>
+      <div class="kpi-anterior">Semana anterior: [Y]%</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-dim">Performance</div>
+      <div class="kpi-nome">Latência p95</div>
+      <div class="kpi-row">
+        <span class="kpi-valor">[X]s</span>
+        <span class="trend estavel">[▼ melhorou / ▲ piorou / ▬ estável]</span>
+      </div>
+      <div class="kpi-anterior">Semana anterior: [Y]s</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-dim">Adoção</div>
+      <div class="kpi-nome">Volume de interações/dia</div>
+      <div class="kpi-row">
+        <span class="kpi-valor">[X]</span>
+        <span class="trend melhorou">[▼ melhorou / ▲ piorou / ▬ estável]</span>
+      </div>
+      <div class="kpi-anterior">Semana anterior: [Y]</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-dim">Negócio</div>
+      <div class="kpi-nome">TMA (tempo médio de atendimento)</div>
+      <div class="kpi-row">
+        <span class="kpi-valor">[X] min</span>
+        <span class="trend melhorou">[▼ melhorou / ▲ piorou / ▬ estável]</span>
+      </div>
+      <div class="kpi-anterior">Semana anterior: [Y] min</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-dim">Negócio</div>
+      <div class="kpi-nome">CSAT em atendimentos com IA</div>
+      <div class="kpi-row">
+        <span class="kpi-valor">[X]</span>
+        <span class="trend estavel">[▼ melhorou / ▲ piorou / ▬ estável]</span>
+      </div>
+      <div class="kpi-anterior">Semana anterior: [Y]</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h2>Ações Planejadas</h2>
+      <table>
+        <thead>
+          <tr><th>Ação</th><th>Responsável</th><th>Prazo</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>[Descrição da ação, ex: atualizar base de conhecimento sobre X]</td>
+            <td>[Nome/squad]</td>
+            <td>[DD/MM]</td>
+            <td><span class="status-badge status-andamento">Em andamento</span></td>
+          </tr>
+          <tr>
+            <td>[Descrição da ação]</td>
+            <td>[Nome/squad]</td>
+            <td>[DD/MM]</td>
+            <td><span class="status-badge status-pendente">Pendente</span></td>
+          </tr>
+          <tr>
+            <td>[Descrição da ação]</td>
+            <td>[Nome/squad]</td>
+            <td>[DD/MM]</td>
+            <td><span class="status-badge status-concluida">Concluída</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Alertas da Semana</h2>
+      <div class="alerta-linha">
+        <span class="alerta-cond">Feedback negativo &gt; 15% em 24h</span>
+        <span class="alerta-ok">Normal</span>
+      </div>
+      <div class="alerta-linha">
+        <span class="alerta-cond">Falha no retrieval &gt; 10% em 1h</span>
+        <span class="alerta-disparado">Disparado</span>
+      </div>
+      <div class="alerta-linha">
+        <span class="alerta-cond">Latência p95 &gt; 5s por 15min</span>
+        <span class="alerta-ok">Normal</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>DB1 Global Software &nbsp;·&nbsp; Documento confidencial &nbsp;·&nbsp; Cliente: NovaTech &nbsp;·&nbsp; [Semana de referência]</footer>
+
+</body>
+</html>
